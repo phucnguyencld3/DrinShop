@@ -1,0 +1,451 @@
+﻿@model DrinShop.Models.Product
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.ShowBreadcrumb = true;
+    var relatedProducts = ViewBag.RelatedProducts as List<DrinShop.Models.Product>;
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item">
+        <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a asp-controller="Shop" asp-action="Index">Sản phẩm</a>
+    </li>
+    @if (Model.Category != null)
+    {
+        <li class="breadcrumb-item">
+            <a asp-controller="Shop" asp-action="Category" asp-route-id="@Model.CategoryID">@Model.Category.CategoryName</a>
+        </li>
+    }
+    <li class="breadcrumb-item active">@Model.ProductName</li>
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6">
+            <div class="product-gallery">
+                @if (Model.ProductImages?.Any() == true)
+                {
+                    var mainImage = Model.ProductImages.FirstOrDefault(pi => pi.IsDefault)
+                    ?? Model.ProductImages.FirstOrDefault();
+
+                    <div class="main-image mb-3">
+                        <img src="@mainImage.ImageUrl" alt="@Model.ProductName"
+                             class="img-fluid rounded shadow" id="mainProductImage"
+                             style="width: 100%; height: 400px; object-fit: cover;">
+                    </div>
+
+                    @if (Model.ProductImages.Count > 1)
+                    {
+                        <div class="thumbnail-images">
+                            <div class="row">
+                                @foreach (var image in Model.ProductImages)
+                                {
+                                    <div class="col-3 mb-2">
+                                        <img src="@image.ImageUrl" alt="@Model.ProductName"
+                                             class="img-fluid rounded thumbnail-image @(image.IsDefault ? "active" : "")"
+                                             style="height: 80px; object-fit: cover; cursor: pointer;"
+                                             onclick="changeMainImage('@image.ImageUrl')">
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="main-image mb-3">
+                        <div class="d-flex align-items-center justify-content-center bg-light rounded shadow"
+                             style="height: 400px;">
+                            <i class="fas fa-image fa-5x text-muted"></i>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <div class="product-info">
+                <h1 class="product-title">@Model.ProductName</h1>
+
+                @if (Model.Category != null)
+                {
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-tag"></i>
+                        <a asp-controller="Shop" asp-action="Category" asp-route-id="@Model.CategoryID" class="text-decoration-none">
+                            @Model.Category.CategoryName
+                        </a>
+                    </p>
+                }
+
+                @if (Model.Brand != null)
+                {
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-building"></i> @Model.Brand.BrandName
+                    </p>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="product-description mb-4">
+                        <h6>Mô tả sản phẩm:</h6>
+                        <p class="text-muted">@Model.Description</p>
+                    </div>
+                }
+
+                <!-- Product Variants -->
+                @if (Model.Variants?.Any() == true)
+                {
+                    <div class="product-variants mb-4">
+                        <h6>Lựa chọn sản phẩm:</h6>
+
+                        @if (Model.ProductOptions?.Any() == true)
+                        {
+                            <form id="variantSelectionForm">
+                                @foreach (var option in Model.ProductOptions)
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">@option.Name:</label>
+                                        <div class="option-values">
+                                            @foreach (var value in option.Values)
+                                            {
+                                                <button type="button"
+                                                        class="btn btn-outline-primary btn-sm me-2 mb-2 option-value-btn"
+                                                        data-option-id="@option.ProductOptionId"
+                                                        data-value-id="@value.ProductOptionValueId"
+                                                        data-value="@value.Value">
+                                                    @value.Value
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </form>
+                        }
+                        else
+                        {
+                            <!-- Simple variant selection without options -->
+                            <div class="variant-list">
+                                @foreach (var variant in Model.Variants)
+                                {
+                                    <div class="variant-item border rounded p-3 mb-2 @(variant.Stock > 0 ? "" : "disabled")"
+                                         data-variant-id="@variant.VariantID"
+                                         style="cursor: @(variant.Stock > 0 ? "pointer" : "not-allowed");">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>@variant.VariantName</strong>
+                                                @if (!string.IsNullOrEmpty(variant.Description))
+                                                {
+                                                    <br>
+
+                                                    <small class="text-muted">@variant.Description</small>
+                                                }
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="price h5 text-primary mb-0">@variant.UnitPrice.ToString("N0") ₫</div>
+                                                @if (variant.Stock <= 0)
+                                                {
+                                                    <small class="text-danger">Hết hàng</small>
+                                                }
+                                                else if (variant.Stock <= 5)
+                                                {
+                                                    <small class="text-warning">Còn @variant.Stock</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Selected Variant Info -->
+                    <div id="selectedVariantInfo" class="alert alert-info d-none">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong id="selectedVariantName"></strong>
+                                <div id="selectedVariantPrice" class="h5 text-primary mb-0"></div>
+                            </div>
+                            <div id="selectedVariantStock" class="text-muted"></div>
+                        </div>
+                    </div>
+
+                    <!-- Add to Cart -->
+                    <div class="add-to-cart-section">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label">Số lượng:</label>
+                                <input type="number" class="form-control" id="quantity" value="1" min="1" max="10">
+                            </div>
+                            <div class="col-md-8">
+                                <button type="button" class="btn btn-primary btn-lg w-100" id="addToCartBtn" disabled>
+                                    <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
+                                </button>
+                            </div>
+                        </div>
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <button type="button" class="btn btn-outline-danger mt-2 w-100" id="addToWishlistBtn">
+                                <i class="fas fa-heart"></i> Thêm vào yêu thích
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Sản phẩm hiện tại chưa có biến thể nào. Vui lòng quay lại sau.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (relatedProducts?.Any() == true)
+    {
+        <div class="related-products mt-5">
+            <h4 class="mb-4">Sản phẩm liên quan</h4>
+            <div class="row">
+                @foreach (var relatedProduct in relatedProducts)
+                {
+                    var defaultImage = relatedProduct.ProductImages?.FirstOrDefault(pi => pi.IsDefault)
+                    ?? relatedProduct.ProductImages?.FirstOrDefault();
+                    var minPrice = relatedProduct.Variants?.Any() == true ? relatedProduct.Variants.Min(v => v.UnitPrice) : 0;
+
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="position-relative">
+                                @if (defaultImage != null)
+                                {
+                                    <img src="@defaultImage.ImageUrl" class="card-img-top" alt="@relatedProduct.ProductName"
+                                         style="height: 200px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                                         style="height: 200px;">
+                                        <i class="fas fa-image fa-2x text-muted"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">@relatedProduct.ProductName</h6>
+                                @if (minPrice > 0)
+                                {
+                                    <p class="text-primary fw-bold">@minPrice.ToString("N0") ₫</p>
+                                }
+                                <a asp-controller="Shop" asp-action="Product" asp-route-id="@relatedProduct.ProductID"
+                                   class="btn btn-primary btn-sm">
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        let selectedVariantId = null;
+        let selectedOptions = {};
+
+        // Change main image
+        function changeMainImage(imageUrl) {
+            document.getElementById('mainProductImage').src = imageUrl;
+
+            // Update active thumbnail
+            document.querySelectorAll('.thumbnail-image').forEach(img => {
+                img.classList.remove('active');
+                if (img.src.includes(imageUrl.split('/').pop())) {
+                    img.classList.add('active');
+                }
+            });
+        }
+
+        // Option value selection
+        document.querySelectorAll('.option-value-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const optionId = this.dataset.optionId;
+                const valueId = this.dataset.valueId;
+                const value = this.dataset.value;
+
+                // Remove active from other options in same group
+                document.querySelectorAll(`[data-option-id="${optionId}"]`).forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-outline-primary');
+                });
+
+                // Set this as active
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+
+                // Store selection
+                selectedOptions[optionId] = {
+                    valueId: valueId,
+                    value: value
+                };
+
+                // Find matching variant
+                findMatchingVariant();
+            });
+        });
+
+        // Simple variant selection (without options)
+        document.querySelectorAll('.variant-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+
+                // Remove active from others
+                document.querySelectorAll('.variant-item').forEach(v => v.classList.remove('active'));
+
+                // Set active
+                this.classList.add('active');
+
+                selectedVariantId = this.dataset.variantId;
+
+                // Enable add to cart
+                document.getElementById('addToCartBtn').disabled = false;
+            });
+        });
+
+        function findMatchingVariant() {
+            // This would need to match variants based on selected options
+            // For now, enable add to cart if all options selected
+            const totalOptions = document.querySelectorAll('.option-values').length;
+            const selectedCount = Object.keys(selectedOptions).length;
+
+            if (selectedCount === totalOptions) {
+                document.getElementById('addToCartBtn').disabled = false;
+                // Here you would typically make an AJAX call to find the exact variant
+            } else {
+                document.getElementById('addToCartBtn').disabled = true;
+            }
+        }
+
+        // Add to Cart
+        document.getElementById('addToCartBtn')?.addEventListener('click', function() {
+            if (!selectedVariantId && Object.keys(selectedOptions).length === 0) {
+                toastr.warning('Vui lòng chọn phiên bản sản phẩm');
+                return;
+            }
+
+            const quantity = document.getElementById('quantity').value;
+
+            // Add to cart logic here
+            fetch('/Cart/Add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productId: @Model.ProductID,
+                    variantId: selectedVariantId,
+                    quantity: quantity,
+                    selectedOptions: selectedOptions
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Đã thêm vào giỏ hàng!');
+                    // Update cart count
+                    updateCartCount();
+                } else {
+                    toastr.error(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                toastr.error('Có lỗi xảy ra khi thêm vào giỏ hàng');
+            });
+        });
+
+        // Add to Wishlist
+        document.getElementById('addToWishlistBtn')?.addEventListener('click', function() {
+            fetch('/Account/AddToWishlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productId: @Model.ProductID
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Đã thêm vào yêu thích!');
+                    updateWishlistCount();
+                } else {
+                    toastr.error(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                toastr.error('Có lỗi xảy ra khi thêm vào yêu thích');
+            });
+        });
+
+        // Update cart count function (should be available from layout)
+        function updateCartCount() {
+            if (typeof window.updateCartCount === 'function') {
+                window.updateCartCount();
+            }
+        }
+
+        function updateWishlistCount() {
+            if (typeof window.updateWishlistCount === 'function') {
+                window.updateWishlistCount();
+            }
+        }
+    </script>
+
+    <style>
+        .thumbnail-image {
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+            .thumbnail-image.active {
+                border-color: #007bff;
+            }
+
+        .variant-item {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+            .variant-item:hover:not(.disabled) {
+                background-color: #f8f9fa;
+            }
+
+            .variant-item.active {
+                background-color: #e3f2fd;
+                border-color: #007bff !important;
+            }
+
+            .variant-item.disabled {
+                opacity: 0.6;
+                background-color: #f8f9fa;
+            }
+
+        .option-value-btn {
+            transition: all 0.3s;
+        }
+
+        .product-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+

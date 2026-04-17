@@ -1,0 +1,590 @@
+﻿@model DrinShop.Models.CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    // Define custom CSS variables for easy maintenance
+    const string PrimaryColor = "#6C4E31";
+    const string SecondaryColor = "#A67C52";
+    const string AccentColor = "#8BC34A";
+    const string TextColor = "#2A2A2A";
+    const string LightBgColor = "#F5E9DA";
+    const string CreamBgColor = "#DCC5A1";
+}
+
+<style>
+    :root {
+        --primary-custom: @PrimaryColor;
+        --cream-bg-custom: @CreamBgColor;
+        --accent-custom: @AccentColor;
+        --secondary-custom: @SecondaryColor;
+        --text-custom: @TextColor;
+        --light-bg-custom: @LightBgColor;
+    }
+
+    .text-primary-custom {
+        color: var(--primary-custom) !important;
+    }
+
+    .bg-primary-custom {
+        background-color: var(--primary-custom) !important;
+    }
+
+    .bg-cream-custom {
+        background-color: var(--cream-bg-custom) !important;
+    }
+
+    .border-cream-custom {
+        border-color: var(--cream-bg-custom) !important;
+    }
+
+    .text-accent-custom {
+        color: var(--accent-custom) !important;
+    }
+
+    .bg-accent-custom {
+        background-color: var(--accent-custom) !important;
+    }
+
+    .text-secondary-custom {
+        color: var(--secondary-custom) !important;
+    }
+
+    .bg-light-custom {
+        background-color: var(--light-bg-custom) !important;
+    }
+
+    .text-body-custom {
+        color: var(--text-custom) !important;
+    }
+
+    .btn-primary-custom {
+        color: white;
+        background-color: var(--primary-custom);
+        border-color: var(--primary-custom);
+    }
+
+        .btn-primary-custom:hover {
+            background-color: var(--secondary-custom);
+            border-color: var(--secondary-custom);
+        }
+
+    .btn-outline-secondary-custom {
+        color: var(--primary-custom);
+        border-color: var(--cream-bg-custom);
+    }
+
+        .btn-outline-secondary-custom:hover {
+            background-color: var(--light-bg-custom);
+            color: var(--primary-custom);
+            border-color: var(--primary-custom);
+        }
+
+    .payment-option, .shipping-option {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .payment-option:hover, .shipping-option:hover {
+            background-color: var(--light-bg-custom) !important;
+            border-color: var(--primary-custom) !important;
+        }
+
+        .payment-option.selected, .shipping-option.selected {
+            background-color: var(--cream-bg-custom) !important;
+            border-color: var(--primary-custom) !important;
+            border-width: 2px !important;
+        }
+
+    .checkout-step {
+        position: relative;
+        padding: 1.5rem;
+    }
+
+        .checkout-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-custom), var(--accent-custom));
+        }
+</style>
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light-custom p-2 rounded">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-secondary-custom">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Cart" asp-action="Index" class="text-secondary-custom">Giỏ hàng</a></li>
+            <li class="breadcrumb-item active text-primary-custom" aria-current="page">Thanh toán</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h1 class="h3 mb-0 text-primary-custom">
+            <i class="fas fa-credit-card me-2"></i> Thanh toán đơn hàng
+        </h1>
+        <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary-custom">
+            <i class="fas fa-arrow-left"></i> Quay lại giỏ hàng
+        </a>
+    </div>
+
+    <form id="checkoutForm" asp-action="PlaceOrder" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <!-- Left Column - Order Details -->
+            <div class="col-lg-8">
+                <!-- Customer Information -->
+                <div class="card shadow-sm mb-4 border-cream-custom">
+                    <div class="card-header bg-cream-custom checkout-step">
+                        <h5 class="mb-0 text-primary-custom">
+                            <i class="fas fa-user me-2"></i> Thông tin khách hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="CustomerName" class="form-label fw-bold">Họ tên:</label>
+                                    <input type="text" class="form-control" id="CustomerName" name="CustomerName"
+                                           value="@Model.CustomerName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="CustomerPhone" class="form-label fw-bold">Số điện thoại:</label>
+                                    <input type="tel" class="form-control" id="CustomerPhone" name="CustomerPhone"
+                                           value="@Model.CustomerPhone" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Email:</label>
+                                    <input type="email" class="form-control" value="@Model.Customer.Email" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Selection -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="SelectedProvinceCode" class="form-label fw-bold">Tỉnh/Thành phố:</label>
+                                    <select class="form-select" id="SelectedProvinceCode" name="SelectedProvinceCode" required>
+                                        <option value="">Chọn tỉnh/thành phố</option>
+                                        @foreach (var province in Model.Provinces)
+                                        {
+                                            <option value="@province.Code" selected="@(Model.SelectedProvinceCode == province.Code)">
+                                                @province.Name
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="SelectedDistrictCode" class="form-label fw-bold">Quận/Huyện:</label>
+                                    <select class="form-select" id="SelectedDistrictCode" name="SelectedDistrictCode" required>
+                                        <option value="">Chọn quận/huyện</option>
+                                        @foreach (var district in Model.Districts)
+                                        {
+                                            <option value="@district.Code" selected="@(Model.SelectedDistrictCode == district.Code)">
+                                                @district.Name
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="SelectedWardCode" class="form-label fw-bold">Phường/Xã:</label>
+                                    <select class="form-select" id="SelectedWardCode" name="SelectedWardCode" required>
+                                        <option value="">Chọn phường/xã</option>
+                                        @foreach (var ward in Model.Wards)
+                                        {
+                                            <option value="@ward.Code" selected="@(Model.SelectedWardCode == ward.Code)">
+                                                @ward.Name
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="CustomerAddress" class="form-label fw-bold">Địa chỉ chi tiết:</label>
+                                    <input type="text" class="form-control" id="CustomerAddress" name="CustomerAddress"
+                                           value="@Model.CustomerAddress" placeholder="Số nhà, tên đường..." required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full Address Display -->
+                        <div class="alert alert-info">
+                            <strong>Địa chỉ giao hàng:</strong>
+                            <span id="fullAddress">@Model.DeliveryAddress</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Method -->
+                <div class="card shadow-sm mb-4 border-cream-custom">
+                    <div class="card-header bg-cream-custom checkout-step">
+                        <h5 class="mb-0 text-primary-custom">
+                            <i class="fas fa-truck me-2"></i> Phương thức giao hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var shipping in Model.ShippingMethods)
+                        {
+                            <div class="shipping-option p-3 border rounded mb-3" data-value="@shipping.Value" data-fee="@shipping.Fee">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="SelectedShippingMethod"
+                                           value="@shipping.Value" id="shipping_@shipping.Value"
+                                    @(Model.SelectedShippingMethod == shipping.Value ? "checked" : "")>
+                                    <label class="form-check-label w-100" for="shipping_@shipping.Value">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="@shipping.Icon text-primary-custom me-2"></i>
+                                                <strong>@shipping.Text</strong>
+                                                <p class="mb-0 text-muted small">@shipping.Description</p>
+                                            </div>
+                                            <div class="text-end">
+                                                @if (shipping.Fee > 0)
+                                                {
+                                                    <span class="h6 text-danger mb-0">@shipping.Fee.ToString("N0")₫</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="h6 text-accent-custom mb-0">Miễn phí</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="card shadow-sm mb-4 border-cream-custom">
+                    <div class="card-header bg-cream-custom checkout-step">
+                        <h5 class="mb-0 text-primary-custom">
+                            <i class="fas fa-credit-card me-2"></i> Phương thức thanh toán
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var payment in Model.PaymentMethods)
+                        {
+                            <div class="payment-option p-3 border rounded mb-3" data-value="@payment.Value">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="SelectedPaymentMethod"
+                                           value="@payment.Value" id="payment_@payment.Value"
+                                    @(Model.SelectedPaymentMethod == payment.Value ? "checked" : "")>
+                                    <label class="form-check-label w-100" for="payment_@payment.Value">
+                                        <i class="@payment.Icon text-primary-custom me-2"></i>
+                                        <strong>@payment.Text</strong>
+                                        <p class="mb-0 text-muted small">@payment.Description</p>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="card shadow-sm mb-4 border-cream-custom">
+                    <div class="card-header bg-cream-custom">
+                        <h6 class="mb-0 text-primary-custom">
+                            <i class="fas fa-comment me-2"></i> Ghi chú đơn hàng
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="Notes" class="form-control" rows="3"
+                                  placeholder="Ghi chú đặc biệt cho đơn hàng (tùy chọn)">@Model.Notes</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Order Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-lg border-primary-custom sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary-custom text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2"></i> Tóm tắt đơn hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Cart Items -->
+                        <div class="mb-3">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary-custom">
+                                Sản phẩm (@Model.Cart.CartDetails.Sum(cd => cd.Quantity) món)
+                            </h6>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                @foreach (var item in Model.Cart.CartDetails)
+                                {
+                                    string imageUrl = "/images/no-image.png";
+                                    string productName = "";
+
+                                    if (item.Variant != null)
+                                    {
+                                        imageUrl = item.Variant.Product?.ProductImages?.FirstOrDefault(pi => pi.IsDefault)?.ImageUrl
+                                        ?? item.Variant.Product?.ProductImages?.FirstOrDefault()?.ImageUrl
+                                        ?? "/images/no-image.png";
+                                        productName = item.Variant.Product?.ProductName ?? "Sản phẩm";
+                                    }
+                                    else if (item.Bundle != null)
+                                    {
+                                        imageUrl = !string.IsNullOrEmpty(item.Bundle.ImageUrl) ? item.Bundle.ImageUrl :
+                                        (item.Bundle.BundleItems?.FirstOrDefault()?.Variant?.Product?.ProductImages?
+                                        .OrderByDescending(x => x.IsDefault).FirstOrDefault()?.ImageUrl ?? "/images/no-image.png");
+                                        productName = item.Bundle.Name ?? "Combo";
+                                    }
+
+                                    <div class="d-flex align-items-center mb-3 pb-2 border-bottom border-light">
+                                        <img src="@imageUrl" alt="@productName" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 small">@productName</h6>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-muted small">SL: @item.Quantity</span>
+                                                <span class="fw-bold text-primary-custom">@item.TotalPrice.ToString("N0")₫</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Price Summary -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tạm tính:</span>
+                                <span id="subtotal">@Model.SubTotal.ToString("N0")₫</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Phí giao hàng:</span>
+                                <span id="shippingFee">@Model.ShippingFee.ToString("N0")₫</span>
+                            </div>
+                            <hr class="border-primary-custom">
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong class="text-primary-custom">Tổng cộng:</strong>
+                                <strong class="h5 text-danger mb-0" id="finalTotal">@Model.FinalTotal.ToString("N0")₫</strong>
+                            </div>
+
+                            <!-- Place Order Button -->
+                            <button type="submit" class="btn btn-accent-custom btn-lg w-100 mb-3" id="placeOrderBtn">
+                                <i class="fas fa-check-circle me-2"></i> Đặt hàng ngay
+                            </button>
+
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt text-accent-custom me-1"></i>
+                                    Thanh toán an toàn & bảo mật 100%
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden fields -->
+        <input type="hidden" name="DeliveryAddress" value="@Model.DeliveryAddress" />
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        let subtotal = @Model.SubTotal;
+
+        // Payment method selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                const radioButton = this.querySelector('input[type="radio"]');
+                radioButton.checked = true;
+            });
+        });
+
+        // Shipping method selection
+        document.querySelectorAll('.shipping-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.shipping-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                const radioButton = this.querySelector('input[type="radio"]');
+                radioButton.checked = true;
+                updateShippingFee();
+            });
+        });
+
+        // Update shipping fee
+        function updateShippingFee() {
+            const selectedShipping = document.querySelector('input[name="SelectedShippingMethod"]:checked');
+            if (selectedShipping) {
+                const selectedOption = document.querySelector(`.shipping-option[data-value="${selectedShipping.value}"]`);
+                const fee = parseInt(selectedOption.getAttribute('data-fee'));
+                document.getElementById('shippingFee').textContent = fee.toLocaleString('vi-VN') + '₫';
+                const finalTotal = subtotal + fee;
+                document.getElementById('finalTotal').textContent = finalTotal.toLocaleString('vi-VN') + '₫';
+            }
+        }
+
+        // Form submission
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const paymentMethod = document.querySelector('input[name="SelectedPaymentMethod"]:checked');
+            const shippingMethod = document.querySelector('input[name="SelectedShippingMethod"]:checked');
+
+            if (!paymentMethod) {
+                toastr.error('Vui lòng chọn phương thức thanh toán!');
+                return;
+            }
+
+            if (!shippingMethod) {
+                toastr.error('Vui lòng chọn phương thức giao hàng!');
+                return;
+            }
+
+            const submitBtn = document.getElementById('placeOrderBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...';
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl;
+                    }, 1500);
+                } else {
+                    toastr.error(data.message);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Đặt hàng ngay';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('Đã xảy ra lỗi khi đặt hàng!');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Đặt hàng ngay';
+            });
+        });
+
+        // Cascading dropdown for address
+        document.getElementById('SelectedProvinceCode').addEventListener('change', function() {
+            const provinceCode = this.value;
+            const districtSelect = document.getElementById('SelectedDistrictCode');
+            const wardSelect = document.getElementById('SelectedWardCode');
+
+            districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+            wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+
+            if (provinceCode) {
+                fetch(`/Checkout/GetDistricts?provinceCode=${provinceCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(district => {
+                            const option = new Option(district.text, district.value);
+                            districtSelect.add(option);
+                        });
+                    });
+            }
+            updateFullAddress();
+        });
+
+        document.getElementById('SelectedDistrictCode').addEventListener('change', function() {
+            const districtCode = this.value;
+            const wardSelect = document.getElementById('SelectedWardCode');
+
+            wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+
+            if (districtCode) {
+                fetch(`/Checkout/GetWards?districtCode=${districtCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(ward => {
+                            const option = new Option(ward.text, ward.value);
+                            wardSelect.add(option);
+                        });
+                    });
+            }
+            updateFullAddress();
+        });
+
+        document.getElementById('SelectedWardCode').addEventListener('change', updateFullAddress);
+        document.getElementById('CustomerAddress').addEventListener('input', updateFullAddress);
+
+        function updateFullAddress() {
+            const address = document.getElementById('CustomerAddress').value;
+            const provinceText = document.getElementById('SelectedProvinceCode').selectedOptions[0]?.text || '';
+            const districtText = document.getElementById('SelectedDistrictCode').selectedOptions[0]?.text || '';
+            const wardText = document.getElementById('SelectedWardCode').selectedOptions[0]?.text || '';
+
+            let fullAddress = '';
+            if (address) fullAddress += address;
+            if (wardText && wardText !== 'Chọn phường/xã') fullAddress += (fullAddress ? ', ' : '') + wardText;
+            if (districtText && districtText !== 'Chọn quận/huyện') fullAddress += (fullAddress ? ', ' : '') + districtText;
+            if (provinceText && provinceText !== 'Chọn tỉnh/thành phố') fullAddress += (fullAddress ? ', ' : '') + provinceText;
+
+            document.getElementById('fullAddress').textContent = fullAddress || 'Vui lòng điền đầy đủ thông tin';
+
+            const hiddenDeliveryAddress = document.querySelector('input[name="DeliveryAddress"]');
+            if (hiddenDeliveryAddress) {
+                hiddenDeliveryAddress.value = fullAddress;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedPayment = document.querySelector('input[name="SelectedPaymentMethod"]:checked');
+            if (selectedPayment) {
+                selectedPayment.closest('.payment-option').classList.add('selected');
+            }
+
+            const selectedShipping = document.querySelector('input[name="SelectedShippingMethod"]:checked');
+            if (selectedShipping) {
+                selectedShipping.closest('.shipping-option').classList.add('selected');
+            }
+
+            if (!selectedPayment && document.querySelector('input[name="SelectedPaymentMethod"]')) {
+                document.querySelector('input[name="SelectedPaymentMethod"]').checked = true;
+                document.querySelector('.payment-option').classList.add('selected');
+            }
+
+            if (!selectedShipping && document.querySelector('input[name="SelectedShippingMethod"]')) {
+                document.querySelector('input[name="SelectedShippingMethod"]').checked = true;
+                document.querySelector('.shipping-option').classList.add('selected');
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .btn-accent-custom {
+            color: white;
+            background-color: var(--accent-custom);
+            border-color: var(--accent-custom);
+        }
+
+            .btn-accent-custom:hover {
+                background-color: #6AA84F;
+                border-color: #6AA84F;
+            }
+    </style>
+}
+

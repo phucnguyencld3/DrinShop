@@ -1,0 +1,68 @@
+﻿@model List<DrinShop.Models.ProductOption>
+@{
+    ViewData["Title"] = "Danh sách thuộc tính";
+    var product = ViewData["Product"] as DrinShop.Models.Product;
+}
+
+<h2>Thuộc tính của sản phẩm: @product.ProductName</h2>
+
+<a class="btn btn-primary mb-3" asp-action="Edit" asp-route-productId="@product.ProductID">Thêm thuộc tính mới</a>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Tên thuộc tính</th>
+            <th>Giá trị</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var option in Model)
+        {
+            <tr>
+                <td>@option.Name</td>
+                <td>
+                    @foreach (var val in option.Values)
+                    {
+                        <span class="badge bg-secondary me-1">
+                            @val.Value
+                            <button class="btn btn-sm btn-danger ms-1 delete-value" data-id="@val.ProductOptionValueId">x</button>
+                        </span>
+                    }
+                </td>
+                <td>
+                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-productId="@option.ProductId" asp-route-id="@option.ProductOptionId">Sửa</a>
+                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@option.ProductOptionId"
+                       onclick="return confirm('Bạn có chắc muốn xóa thuộc tính này?');">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+            $(".delete-value").click(function(e){
+                e.preventDefault();
+                var valueId = $(this).data("id");
+                if(confirm("Bạn có chắc muốn xóa giá trị này?")){
+                    $.post('@Url.Action("DeleteValue")', { valueId: valueId }, function(res){
+                        alert(res.message);
+                        if(res.success) location.reload();
+                    });
+                }
+            });
+        });
+    </script>
+}

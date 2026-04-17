@@ -1,0 +1,176 @@
+﻿@model IEnumerable<DrinShop.Models.Category>
+
+@{
+    ViewData["Title"] = "Danh sách danh mục";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Danh sách danh mục</h2>
+    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+    {
+        <a asp-action="Edit" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-circle"></i> Thêm danh mục mới
+        </a>
+    }
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-octagon-fill"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Người tạo</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int stt = 1;
+                        }
+                        @foreach (var category in Model)
+                        {
+                            <tr>
+                                <td>@stt</td>
+                                <td>
+                                    <strong>@category.CategoryName</strong>
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrEmpty(category.Description))
+                                    {
+                                        <span class="text-muted small">Chưa có mô tả</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@(category.Description.Length > 100 ? category.Description.Substring(0, 100) + "..." : category.Description)</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (category.Status)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle-fill"></i> Kích hoạt
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-pause-circle-fill"></i> Vô hiệu
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @category.CreateDate?.ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    @(string.IsNullOrEmpty(category.CreatedBy) ? "--" : category.CreatedBy)
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Category Actions">
+                                        <a asp-action="Details" asp-route-id="@category.CategoryID" class="btn btn-outline-info" title="Chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@category.CategoryID" class="btn btn-outline-warning" title="Sửa">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-delete-category"
+                                                        data-id="@category.CategoryID"
+                                                        data-name="@category.CategoryName"
+                                                        title="Xóa">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <p class="text-muted">Tổng số: <strong>@Model.Count()</strong> Danh mục</p>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-list-nested text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted">Chưa có danh mục nào</h5>
+                <p class="text-muted">Hãy thêm danh mục đầu tiên!</p>
+                @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                {
+                    <a asp-action="Edit" class="btn btn-success shadow-sm">
+                        <i class="bi bi-plus-circle"></i> Thêm danh mục mới
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Xử lý xóa danh mục với SweetAlert2
+        document.querySelectorAll('.btn-delete-category').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const categoryId = this.getAttribute('data-id');
+                const categoryName = this.getAttribute('data-name');
+                const deleteUrl = `@Url.Action("Delete", "Categories")/${categoryId}`;
+
+                Swal.fire({
+                    title: 'Bạn có chắc chắn?',
+                    html: `Bạn muốn xóa danh mục <strong>${categoryName}</strong>? <br><br>
+                           <span class="text-danger">Hành động này không thể hoàn tác!</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash-fill me-1"></i> Đồng ý xóa!',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+        });
+
+        // Tự động ẩn thông báo sau 5 giây
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

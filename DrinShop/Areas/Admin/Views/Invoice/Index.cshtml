@@ -1,0 +1,491 @@
+﻿@model IEnumerable<DrinShop.Models.Invoice>
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-file-invoice text-warning me-2"></i>Quản lý đơn hàng
+    </h1>
+    <div>
+        <button class="btn btn-success btn-sm" onclick="exportInvoices()">
+            <i class="fas fa-download me-1"></i> Xuất Excel
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="showBulkActions()">
+            <i class="fas fa-tasks me-1"></i> Thao tác hàng loạt
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 mb-2">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Chờ xác nhận</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.PendingCount</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-half fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-2">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Đã xác nhận</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.ConfirmedCount</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-2">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Đang giao</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.ShippedCount</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-shipping-fast fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-2">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Hoàn tất</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.CompletedCount</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-double fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-2">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Đã hủy</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.CancelledCount</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-ban fa-2x text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 mb-2">
+        <div class="card border-left-secondary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Tổng đơn</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalInvoices</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-invoice fa-2x text-secondary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h6 class="m-0 font-weight-bold text-primary">Bộ lọc và tìm kiếm</h6>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Trạng thái</label>
+                <select name="status" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="Pending" @@(ViewBag.CurrentStatus == "Pending" ? "selected" : "")>Chờ xác nhận</option>
+                    <option value="Confirmed" @@(ViewBag.CurrentStatus == "Confirmed" ? "selected" : "")>Đã xác nhận</option>
+                    <option value="Shipped" @@(ViewBag.CurrentStatus == "Shipped" ? "selected" : "")>Đang giao hàng</option>
+                    <option value="Completed" @@(ViewBag.CurrentStatus == "Completed" ? "selected" : "")>Hoàn tất</option>
+                    <option value="Cancelled" @@(ViewBag.CurrentStatus == "Cancelled" ? "selected" : "")>Đã hủy</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Tìm kiếm</label>
+                <input type="text" name="search" class="form-control" 
+                       value="@ViewBag.CurrentSearch" 
+                       placeholder="Mã đơn, tên khách hàng, SĐT, địa chỉ...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            Danh sách đơn hàng (@ViewBag.TotalInvoices đơn)
+        </h6>
+    </div>
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="invoicesTable">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" class="form-check-input">
+                            </th>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Trạng thái</th>
+                            <th>Tổng tiền</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var invoice in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input invoice-checkbox" 
+                                           value="@invoice.InvoiceID">
+                                </td>
+                                <td>
+                                    <strong>#@invoice.InvoiceID</strong>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>@invoice.Customer?.FullName</strong>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone me-1"></i>@invoice.Customer?.Phone
+                                    </small>
+                                </td>
+                                <td>
+                                    <small>@invoice.CreatedAt?.ToString("dd/MM/yyyy")</small><br>
+                                    <small class="text-muted">@invoice.CreatedAt?.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    <span id="status_@invoice.InvoiceID">
+                                        @switch (invoice.OrderStatus)
+                                        {
+                                            case OrderStatus.Pending:
+                                                <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                                break;
+                                            case OrderStatus.Confirmed:
+                                                <span class="badge bg-info">Đã xác nhận</span>
+                                                break;
+                                            case OrderStatus.Shipped:
+                                                <span class="badge bg-primary">Đang giao hàng</span>
+                                                break;
+                                            case OrderStatus.Completed:
+                                                <span class="badge bg-success">Hoàn tất</span>
+                                                break;
+                                            case OrderStatus.CancelRequested:
+                                                <span class="badge bg-warning">Yêu cầu hủy</span>
+                                                break;
+                                            case OrderStatus.Cancelled:
+                                                <span class="badge bg-danger">Đã hủy</span>
+                                                break;
+                                        }
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>@((invoice.TotalAmount + invoice.ShippingFee).ToString("N0"))₫</strong>
+                                    <br><small class="text-muted">+@invoice.ShippingFee.ToString("N0")₫ ship</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@invoice.InvoiceID" 
+                                           class="btn btn-info btn-sm" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if (invoice.OrderStatus == OrderStatus.Pending)
+                                        {
+                                            <button class="btn btn-success btn-sm" 
+                                                    onclick="updateStatus(@invoice.InvoiceID, 'Confirmed')" 
+                                                    title="Xác nhận">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="updateStatus(@invoice.InvoiceID, 'Cancelled')" 
+                                                    title="Hủy">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        }
+                                        @if (invoice.OrderStatus == OrderStatus.Confirmed)
+                                        {
+                                            <button class="btn btn-primary btn-sm" 
+                                                    onclick="updateStatus(@invoice.InvoiceID, 'Shipped')" 
+                                                    title="Giao hàng">
+                                                <i class="fas fa-truck"></i>
+                                            </button>
+                                        }
+                                        @if (invoice.OrderStatus == OrderStatus.Shipped)
+                                        {
+                                           @*  <button class="btn btn-success btn-sm" 
+                                                    onclick="updateStatus(@invoice.InvoiceID, 'Completed')" 
+                                                    title="Hoàn tất">
+                                                <i class="fas fa-check-double"></i>
+                                            </button> *@
+                                            @if (invoice.ShippedAt.HasValue)
+                                            {
+                                                var daysShipped = (DateTime.Now - invoice.ShippedAt.Value).Days;
+                                                <small class="text-muted d-block">
+                                                    Giao từ: @invoice.ShippedAt?.ToString("dd/MM/yyyy")
+                                                    <br>(@daysShipped ngày)
+                                                    @if (daysShipped >= 14)
+                                                    {
+                                                        <span class="text-warning">(Hoàn tất)</span>
+                                                    }
+                                                </small>
+                                            }
+                                        }
+                                        <a asp-action="Print" asp-route-id="@invoice.InvoiceID" 
+                                           class="btn btn-secondary btn-sm" title="In hóa đơn" target="_blank">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                                <a class="page-link" href="?page=@i&status=@ViewBag.CurrentStatus&search=@ViewBag.CurrentSearch">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Không có đơn hàng nào</h5>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Bulk Actions Modal -->
+<div class="modal fade" id="bulkActionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thao tác hàng loạt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Chọn thao tác:</label>
+                    <select class="form-select" id="bulkAction">
+                        <option value="">Chọn thao tác...</option>
+                        <option value="Confirmed">Xác nhận đơn hàng</option>
+                        <option value="Shipped">Chuyển sang đang giao</option>
+                        <option value="Completed">Hoàn tất đơn hàng</option>
+                        <option value="Cancelled">Hủy đơn hàng</option>
+                    </select>
+                </div>
+                <div class="alert alert-info">
+                    <span id="selectedCount">0</span> đơn hàng được chọn
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="executeBulkAction()">Thực hiện</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Select all checkbox
+        $('#selectAll').change(function() {
+            $('.invoice-checkbox').prop('checked', this.checked);
+            updateSelectedCount();
+        });
+
+        $('.invoice-checkbox').change(function() {
+            updateSelectedCount();
+        });
+
+        function updateSelectedCount() {
+            const count = $('.invoice-checkbox:checked').length;
+            $('#selectedCount').text(count);
+        }
+
+        function showBulkActions() {
+            const selectedCount = $('.invoice-checkbox:checked').length;
+            if (selectedCount === 0) {
+                toastr.warning('Vui lòng chọn ít nhất một đơn hàng!');
+                return;
+            }
+            $('#bulkActionsModal').modal('show');
+        }
+
+        function executeBulkAction() {
+            const action = $('#bulkAction').val();
+            const selectedIds = $('.invoice-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+
+            if (!action) {
+                toastr.warning('Vui lòng chọn thao tác!');
+                return;
+            }
+
+            if (selectedIds.length === 0) {
+                toastr.warning('Vui lòng chọn ít nhất một đơn hàng!');
+                return;
+            }
+
+            if (confirm(`Bạn có chắc muốn thực hiện thao tác này cho ${selectedIds.length} đơn hàng?`)) {
+                $.post('@Url.Action("BulkUpdateStatus")', {
+                    invoiceIds: selectedIds,
+                    newStatus: action
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                })
+                .fail(function() {
+                    toastr.error('Có lỗi xảy ra!');
+                });
+
+                $('#bulkActionsModal').modal('hide');
+            }
+        }
+
+                function updateStatus(invoiceId, newStatus) {
+            let note = '';
+
+            if (newStatus === 'Cancelled') {
+                // Lấy trạng thái hiện tại của đơn hàng từ DOM
+                const currentStatusElement = $(`#status_${invoiceId} span`);
+                const currentStatusText = currentStatusElement.text().trim();
+
+                // Không cho phép hủy đơn hàng đang giao
+                if (currentStatusText === 'Đang giao hàng') {
+                    toastr.error('Không thể hủy đơn hàng đang trong quá trình giao hàng!');
+                    return;
+                }
+
+                // Nếu là yêu cầu hủy → không cần lý do
+                if (currentStatusText === 'Yêu cầu hủy') {
+                    if (!confirm('Bạn có chắc muốn xác nhận hủy đơn hàng này?')) {
+                        return;
+                    }
+                    note = 'Admin xác nhận hủy theo yêu cầu của khách hàng';
+                }
+                // Nếu admin tự hủy → phải nhập lý do
+                else if (currentStatusText === 'Chờ xác nhận' || currentStatusText === 'Đã xác nhận') {
+                    note = prompt('Vui lòng nhập lý do hủy đơn hàng cho khách hàng:');
+                    if (note === null || note.trim() === '') {
+                        toastr.warning('Vui lòng nhập lý do hủy đơn hàng!');
+                        return;
+                    }
+                }
+                else {
+                    toastr.error('Không thể hủy đơn hàng ở trạng thái hiện tại!');
+                    return;
+                }
+            }
+
+            $.post('@Url.Action("UpdateStatus")', {
+                id: invoiceId,
+                newStatus: newStatus,
+                note: note
+            })
+            .done(function(response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    updateStatusBadge(invoiceId, response.newStatus, response.newStatusText);
+                } else {
+                    toastr.error(response.message);
+                }
+            })
+            .fail(function() {
+                toastr.error('Có lỗi xảy ra!');
+            });
+        }
+
+
+        function updateStatusBadge(invoiceId, status, statusText) {
+            const badgeClasses = {
+                'Pending': 'badge bg-warning text-dark',
+                'Confirmed': 'badge bg-info',
+                'Shipped': 'badge bg-primary',
+                'Completed': 'badge bg-success',
+                'Cancelled': 'badge bg-danger'
+            };
+
+            const badgeClass = badgeClasses[status] || 'badge bg-secondary';
+            $(`#status_${invoiceId}`).html(`<span class="${badgeClass}">${statusText}</span>`);
+        }
+
+        function exportInvoices() {
+            const status = $('select[name="status"]').val();
+            const search = $('input[name="search"]').val();
+            
+            window.location.href = `@Url.Action("Export")?status=${status}&search=${search}`;
+            toastr.info('Đang tạo file export...');
+        }
+    </script>
+}
+

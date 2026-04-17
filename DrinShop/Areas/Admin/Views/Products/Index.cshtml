@@ -1,0 +1,269 @@
+﻿@model IEnumerable<DrinShop.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+}
+
+<style>
+    /* Responsive cho bảng */
+    .product-img {
+        width: 45px;
+        height: 45px;
+        object-fit: cover;
+    }
+
+    /* Ẩn cột phụ trên điện thoại */
+    @@media (max-width: 576px) {
+        .col-md-hide
+
+    {
+        display: none !important;
+    }
+
+    .action-buttons .btn {
+        padding: 2px 6px !important;
+        font-size: 12px !important;
+    }
+
+    th, td {
+        white-space: nowrap;
+    }
+
+    }
+</style>
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-primary">
+        <i class="bi bi-box-seam"></i> Danh Sách Sản Phẩm
+    </h1>
+
+    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+    {
+        <a asp-action="Create" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-circle"></i> Thêm Sản Phẩm
+        </a>
+    }
+</div>
+
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-x-octagon-fill"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+
+@if (Model != null && Model.Any())
+{
+    <div class="card shadow-lg border-0">
+        <div class="card-body p-0">
+
+            <div class="table-responsive table-responsive-sm">
+                <table class="table table-hover table-striped align-middle mb-0" id="productTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center">Ảnh</th>
+                            <th>Mã</th>
+                            <th style="min-width:180px;">Tên sản phẩm</th>
+
+                            <th class="col-md-hide">Danh mục</th>
+                            <th class="col-md-hide">Thương hiệu</th>
+
+                            <th class="text-center">Kho</th>
+                            <th class="text-center">Biến thể</th>
+
+                            <th class="text-center col-md-hide">Trạng thái</th>
+                            <th class="col-md-hide">Ngày tạo</th>
+
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var img = item.ProductImages
+                            .OrderByDescending(x => x.IsDefault)
+                            .ThenBy(x => x.SortOrder)
+                            .FirstOrDefault();
+
+                            var variantCount = item.Variants?.Count ?? 0;
+                            var hasOptions = item.ProductOptions?.Any() ?? false;
+
+                            <tr>
+                                <!-- Ảnh -->
+                                <td class="text-center">
+                                    <img src="@(img?.ImageUrl ?? "/images/placeholder.png")"
+                                         class="img-thumbnail rounded product-img" />
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary">@item.Code</span>
+                                </td>
+
+                                <td>
+                                    <strong>@item.ProductName</strong>
+                                    @if (!string.IsNullOrEmpty(item.Description))
+                                    {
+                                        <small class="text-muted d-block fst-italic">
+                                            @(item.Description.Length > 60
+                                                ? item.Description.Substring(0, 60) + "..."
+                                                : item.Description)
+                                        </small>
+                                    }
+                                </td>
+
+                                <!-- Ẩn trên mobile -->
+                                <td class="col-md-hide">
+                                    <span class="badge bg-info text-dark">
+                                        @(item.Category?.CategoryName ?? "Chưa có")
+                                    </span>
+                                </td>
+
+                                <td class="col-md-hide">
+                                    <span class="badge bg-primary">
+                                        @(item.Brand?.BrandName ?? "Chưa có")
+                                    </span>
+                                </td>
+
+                                <!-- Kho -->
+                                <td class="text-center">
+                                    @if (item.TotalStock > 0)
+                                    {
+                                        <span class="badge rounded-pill bg-success fw-bold">@item.TotalStock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-danger fw-bold">0</span>
+                                    }
+                                </td>
+
+                                <!-- Biến thể -->
+                                <td class="text-center">
+                                    @if (variantCount > 0)
+                                    {
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-layers-fill"></i> @variantCount
+                                        </span>
+                                    }
+                                    else if (hasOptions)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> 0
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-dash-circle"></i> 0
+                                        </span>
+                                    }
+                                </td>
+
+                                <!-- Trạng thái -->
+                                <td class="text-center col-md-hide">
+                                    @if (item.Status)
+                                    {
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Ngừng bán</span>
+                                    }
+                                </td>
+
+                                <!-- Ngày tạo -->
+                                <td class="col-md-hide">
+                                    <small class="text-muted">@item.CreateDate?.ToString("dd/MM/yyyy")</small>
+                                </td>
+
+                                <!-- Thao tác -->
+                                <td class="text-center">
+                                    <div class="btn-group action-buttons">
+
+                                        <a asp-action="Details" asp-route-id="@item.ProductID"
+                                           class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.ProductID"
+                                               class="btn btn-outline-warning btn-sm">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <button type="button" data-id="@item.ProductID" data-name="@item.ProductName"
+                                                    class="btn btn-outline-danger btn-sm btn-delete-product">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+
+                                    </div>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <p class="mt-3 text-muted">Tổng số: <strong class="text-primary">@Model.Count()</strong> sản phẩm</p>
+}
+else
+{
+    <div class="alert alert-info shadow-sm">
+        <h4><i class="bi bi-info-circle-fill"></i> Chưa có sản phẩm nào</h4>
+        <p>Hãy thêm sản phẩm đầu tiên!</p>
+
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+        </a>
+    </div>
+}
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Xóa
+        document.querySelectorAll(".btn-delete-product").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+
+                Swal.fire({
+                    title: "Xác nhận xóa?",
+                    html: `Xóa <strong>${name}</strong>?`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Xóa",
+                    cancelButtonText: "Hủy"
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        window.location.href = "/Admin/Products/Delete/" + id;
+                    }
+                });
+            });
+        });
+    </script>
+}

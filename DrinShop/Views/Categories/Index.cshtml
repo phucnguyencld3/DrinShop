@@ -1,0 +1,82 @@
+﻿@model IEnumerable<DrinShop.Models.Category>
+@{
+    ViewData["Title"] = "Danh mục sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Danh mục</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-primary">
+            <i class="fas fa-list"></i> Danh mục sản phẩm
+        </h2>
+        <p class="lead text-muted">Khám phá đa dạng các loại đồ uống tại DrinShop</p>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var category in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 category-card shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="category-icon mb-3">
+                                <i class="fas fa-coffee fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title text-dark mb-3">@category.CategoryName</h5>
+                            @if (!string.IsNullOrEmpty(category.Description))
+                            {
+                                <p class="card-text text-muted mb-3">@category.Description</p>
+                            }
+                            <div class="d-grid">
+                                <a asp-action="Details" asp-route-id="@category.CategoryID" class="btn btn-primary">
+                                    <i class="fas fa-arrow-right"></i> Xem sản phẩm
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h5>Chưa có danh mục nào</h5>
+            <p>Hệ thống đang cập nhật các danh mục sản phẩm.</p>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Xem tất cả sản phẩm</a>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .category-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 15px;
+        }
+
+            .category-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+            }
+
+        .category-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .category-card:hover .category-icon {
+            transform: scale(1.1);
+        }
+    </style>
+}

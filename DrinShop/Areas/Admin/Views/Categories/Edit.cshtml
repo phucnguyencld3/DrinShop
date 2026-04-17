@@ -1,0 +1,64 @@
+﻿@model DrinShop.Models.Category
+
+@{
+    ViewData["Title"] = Model.CategoryID == 0 ? "Thêm danh mục" : "Sửa danh mục";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">
+        <i class="bi bi-list-nested"></i> @ViewData["Title"]
+    </h3>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Save" method="post">
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="CategoryID" />
+                    <input type="hidden" asp-for="CreatedBy" />
+                    <input type="hidden" asp-for="CreateDate" />
+
+                    <div class="form-group mb-3">
+                        <label asp-for="CategoryName" class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                        <input asp-for="CategoryName" class="form-control" placeholder="Nhập tên danh mục" />
+                        <span asp-validation-for="CategoryName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="form-label">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả danh mục"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check form-switch mb-4 mt-4">
+                        <input asp-for="Status" class="form-check-input" type="checkbox" role="switch" id="statusSwitch" />
+                        <label class="form-check-label" for="statusSwitch">
+                            Trạng thái: Kích hoạt danh mục
+                        </label>
+                    </div>
+
+                    <div class="form-group pt-2 border-top">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-save-fill"></i>
+                            @(Model.CategoryID == 0 ? "Thêm mới" : "Cập nhật")
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left-circle-fill"></i>
+                            Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

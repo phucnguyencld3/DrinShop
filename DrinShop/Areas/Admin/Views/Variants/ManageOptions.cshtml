@@ -1,0 +1,319 @@
+﻿@model List<DrinShop.Models.ProductOption>
+@{
+    ViewData["Title"] = "Quản lý thuộc tính sản phẩm";
+    var productId = ViewBag.ProductId;
+    var productName = ViewBag.ProductName;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cogs"></i>
+                        Quản lý thuộc tính cho sản phẩm: <strong>@productName</strong>
+                    </h3>
+                    <div class="card-tools">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@productId" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Quay lại sản phẩm
+                        </a>
+                        <a asp-action="GenerateVariants" asp-route-id="@productId" class="btn btn-success btn-sm">
+                            <i class="fas fa-magic"></i> Tạo biến thể
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Add New Option Form -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-plus"></i> Thêm thuộc tính mới
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="addOptionForm">
+                                <input type="hidden" name="productId" value="@productId" />
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Tên thuộc tính <span class="text-danger">*</span></label>
+                                            <input type="text" name="name" class="form-control" placeholder="VD: Size, Topping, Độ ngọt..." required>
+                                            <small class="text-muted">Tên thuộc tính phải rõ ràng và dễ hiểu</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Điều chỉnh giá (VNĐ)</label>
+                                            <input type="number" name="priceModifier" class="form-control" value="0" step="1000">
+                                            <small class="text-muted">Tăng/giảm giá cho thuộc tính này</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary btn-block">
+                                                <i class="fas fa-plus"></i> Thêm
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Existing Options -->
+                    @if (Model.Any())
+                    {
+                        <div class="row">
+                            @foreach (var option in Model)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border-left-primary">
+                                        <div class="card-header">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-tag"></i> @option.Name
+                                                    @if (option.PriceModifer != 0)
+                                                    {
+                                                        <span class="badge badge-@(option.PriceModifer > 0 ? "success" : "danger")">
+                                                            @(option.PriceModifer > 0 ? "+" : "")@option.PriceModifer.ToString("N0")₫
+                                                        </span>
+                                                    }
+                                                </h6>
+                                                <button class="btn btn-outline-danger btn-sm delete-option-btn"
+                                                        data-option-id="@option.ProductOptionId"
+                                                        data-option-name="@option.Name">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Add Value Form -->
+                                            <form class="add-value-form mb-3" data-option-id="@option.ProductOptionId">
+                                                <div class="input-group">
+                                                    <input type="text" name="value" class="form-control form-control-sm"
+                                                           placeholder="Thêm giá trị mới..." required>
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+
+                                            <!-- Existing Values -->
+                                            <div class="values-container" data-option-id="@option.ProductOptionId">
+                                                @foreach (var value in option.Values)
+                                                {
+                                                    <div class="d-flex justify-content-between align-items-center mb-2 value-item"
+                                                         data-value-id="@value.ProductOptionValueId">
+                                                        <span class="badge badge-outline-primary p-2">@value.Value</span>
+                                                        <button class="btn btn-outline-danger btn-xs delete-value-btn"
+                                                                data-value-id="@value.ProductOptionValueId"
+                                                                data-value-name="@value.Value">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            @if (!option.Values.Any())
+                                            {
+                                                <p class="text-muted text-center">Chưa có giá trị nào</p>
+                                            }
+                                        </div>
+                                        <div class="card-footer">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                @option.Values.Count giá trị • Tạo lúc @(option.CreatedAt?.ToString("dd/MM/yyyy"))
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có thuộc tính nào</h5>
+                            <p class="text-muted">Hãy thêm thuộc tính đầu tiên cho sản phẩm này.</p>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.Any())
+                {
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <strong>Mẹo:</strong> Tạo đủ thuộc tính và giá trị trước khi tạo biến thể để có nhiều tùy chọn hơn.
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <a asp-action="GenerateVariants" asp-route-id="@productId" class="btn btn-success">
+                                    <i class="fas fa-magic"></i> Tạo biến thể từ thuộc tính
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add new option
+            $('#addOptionForm').submit(function(e) {
+                e.preventDefault();
+
+                const formData = $(this).serialize();
+
+                $.ajax({
+                    url: '@Url.Action("AddOption", "Variants")',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('Có lỗi xảy ra khi thêm thuộc tính');
+                    }
+                });
+            });
+
+            // Add new value
+            $('.add-value-form').submit(function(e) {
+                e.preventDefault();
+
+                const optionId = $(this).data('option-id');
+                const value = $(this).find('input[name="value"]').val();
+                const form = $(this);
+
+                $.ajax({
+                    url: '@Url.Action("AddOptionValue", "Variants")',
+                    type: 'POST',
+                    data: { optionId: optionId, value: value },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+
+                            // Add new value to UI
+                            const valuesContainer = $(`.values-container[data-option-id="${optionId}"]`);
+                            const newValueHtml = `
+                                <div class="d-flex justify-content-between align-items-center mb-2 value-item"
+                                     data-value-id="${response.valueId}">
+                                    <span class="badge badge-outline-primary p-2">${value}</span>
+                                    <button class="btn btn-outline-danger btn-xs delete-value-btn"
+                                            data-value-id="${response.valueId}"
+                                            data-value-name="${value}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `;
+                            valuesContainer.append(newValueHtml);
+                            form[0].reset();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('Có lỗi xảy ra khi thêm giá trị');
+                    }
+                });
+            });
+
+            // Delete option
+            $(document).on('click', '.delete-option-btn', function() {
+                const optionId = $(this).data('option-id');
+                const optionName = $(this).data('option-name');
+
+                if (confirm(`Bạn có chắc chắn muốn xóa thuộc tính "${optionName}"?`)) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteOption", "Variants")',
+                        type: 'POST',
+                        data: { id: optionId },
+                        success: function(response) {
+                            if (response.success) {
+                                toastr.success(response.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                toastr.error(response.message);
+                            }
+                        },
+                        error: function() {
+                            toastr.error('Có lỗi xảy ra khi xóa thuộc tính');
+                        }
+                    });
+                }
+            });
+
+            // Delete value
+            $(document).on('click', '.delete-value-btn', function() {
+                const valueId = $(this).data('value-id');
+                const valueName = $(this).data('value-name');
+                const valueItem = $(this).closest('.value-item');
+
+                if (confirm(`Bạn có chắc chắn muốn xóa giá trị "${valueName}"?`)) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteOptionValue", "Variants")',
+                        type: 'POST',
+                        data: { id: valueId },
+                        success: function(response) {
+                            if (response.success) {
+                                toastr.success(response.message);
+                                valueItem.fadeOut(() => valueItem.remove());
+                            } else {
+                                toastr.error(response.message);
+                            }
+                        },
+                        error: function() {
+                            toastr.error('Có lỗi xảy ra khi xóa giá trị');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .border-left-primary {
+            border-left: 4px solid #007bff !important;
+        }
+
+        .badge-outline-primary {
+            background: transparent;
+            border: 1px solid #007bff;
+            color: #007bff;
+        }
+
+        .btn-xs {
+            padding: 0.125rem 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        .value-item {
+            transition: all 0.3s ease;
+        }
+
+            .value-item:hover {
+                background-color: rgba(0, 123, 255, 0.1);
+                border-radius: 4px;
+                padding: 4px;
+            }
+    </style>
+}
+

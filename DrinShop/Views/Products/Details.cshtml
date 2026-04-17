@@ -1,0 +1,1038 @@
+﻿@model DrinShop.Models.Product
+@{
+    ViewData["Title"] = Model.ProductName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var defaultImage = Model.ProductImages?.FirstOrDefault(pi => pi.IsDefault)?.ImageUrl
+    ?? Model.ProductImages?.FirstOrDefault()?.ImageUrl
+    ?? "/images/no-image.png";
+    var relatedProducts = ViewBag.RelatedProducts as List<DrinShop.Models.Product>;
+    var totalStock = Model.Variants?.Sum(v => v.Stock) ?? 0;
+    var minPrice = Model.Variants?.Any() == true ? Model.Variants.Min(v => v.UnitPrice) : 0;
+    var maxPrice = Model.Variants?.Any() == true ? Model.Variants.Max(v => v.UnitPrice) : 0;
+}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0 text-primary">Chi tiết sản phẩm</h1>
+        <a asp-action="Index" class="btn btn-outline-primary">
+            @* Updated: btn-outline-secondary -> btn-outline-primary *@
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Sản phẩm</a></li>
+            <li class="breadcrumb-item"><a asp-action="Category" asp-route-id="@Model.CategoryID">@Model.Category?.CategoryName</a></li>
+            <li class="breadcrumb-item active">@Model.ProductName</li>
+        </ol>
+    </nav>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @* Màu Success là Xanh Matcha *@
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    @if (Model.ProductImages != null && Model.ProductImages.Any())
+                    {
+                        var defaultImageObj = Model.ProductImages.FirstOrDefault(img => img.IsDefault) ?? Model.ProductImages.First();
+                        <div class="text-center mb-3">
+                            <img id="mainImage"
+                                 src="@defaultImageObj.ImageUrl"
+                                 alt="@Model.ProductName"
+                                 class="img-fluid rounded border main-product-image"
+                                 style="max-height: 400px; object-fit: contain; width: 100%;" />
+                        </div>
+                        @if (Model.ProductImages.Count > 1)
+                        {
+                            <div class="row g-2">
+                                @foreach (var img in Model.ProductImages.OrderBy(i => i.SortOrder))
+                                {
+                                    <div class="col-3">
+                                        <img src="@img.ImageUrl"
+                                             alt="@Model.ProductName"
+                                             class="img-thumbnail thumbnail-image @(img.ImageUrl == defaultImageObj.ImageUrl ? "border-primary" : "")"
+                                             style="cursor: pointer; height: 80px; width: 100%; object-fit: cover;"
+                                             data-image-url="@img.ImageUrl" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-images"></i> @Model.ProductImages.Count hình ảnh
+                            </small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                                <div class="text-muted text-center">
+                                    <i class="fas fa-image" style="font-size: 5rem;"></i>
+                                    <p class="mt-3">Chưa có hình ảnh</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        @* Removed bg-primary text-white to use custom card-header style (Be kem) *@
+                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> Mô tả sản phẩm</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="description-content">
+                            @Html.Raw(Model.Description.Replace(Environment.NewLine, "<br/>"))
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    @* Removed bg-primary text-white to use custom card-header style (Be kem) *@
+                    <h5 class="mb-0"><i class="fas fa-box"></i> Thông tin sản phẩm</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="mb-3 text-primary">@Model.ProductName</h3>
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold" style="width: 30%;">Mã sản phẩm:</td>
+                                <td><code>@Model.Code</code></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Danh mục:</td>
+                                <td>
+                                    @if (Model.Category != null)
+                                    {
+                                        <span class="badge bg-secondary">@Model.Category.CategoryName</span> @* Updated: bg-info -> bg-secondary *@
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Chưa có</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Thương hiệu:</td>
+                                <td>
+                                    @if (Model.Brand != null)
+                                    {
+                                        <span class="badge bg-secondary">@Model.Brand.BrandName</span> @* Updated: bg-primary -> bg-secondary *@
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Chưa có</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Tồn kho:</td>
+                                <td>
+                                    @if (totalStock > 0)
+                                    {
+                                        <span class="badge bg-success fs-6">@totalStock sản phẩm</span> @* bg-success là Xanh Matcha *@
+                                        @if (Model.Variants != null && Model.Variants.Any())
+                                        {
+                                            <br />
+                                            <small class="text-muted">Từ @Model.Variants.Count biến thể</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger fs-6">Hết hàng</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Giá bán:</td>
+                                <td>
+                                    @if (minPrice > 0 && maxPrice > 0)
+                                    {
+                                        @if (minPrice == maxPrice)
+                                        {
+                                            <strong class="text-danger fs-4">@minPrice.ToString("N0") VNĐ</strong>
+                                        }
+                                        else
+                                        {
+                                            <strong class="text-danger fs-4">@minPrice.ToString("N0") - @maxPrice.ToString("N0") VNĐ</strong>
+                                            <br>
+                                            <small class="text-muted">(tùy thuộc biến thể)</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <strong class="text-secondary fs-4">Liên hệ</strong>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Trạng thái:</td>
+                                <td>
+                                    @if (Model.Status)
+                                    {
+                                        <span class="badge bg-success fs-6">
+                                            @* bg-success là Xanh Matcha *@
+                                            <i class="fas fa-check-circle"></i> Có sẵn
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary fs-6">
+                                            <i class="fas fa-times-circle"></i> Ngừng kinh doanh
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr class="my-4" />
+                    @if (Model.ProductOptions != null && Model.ProductOptions.Any())
+                    {
+                        <div id="productOptionsSection" class="mb-4">
+                            <h6 class="mb-3"><i class="fas fa-cog"></i> Tùy chọn sản phẩm</h6>
+                            <div class="alert alert-light mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    Giá sản phẩm sẽ được tính dựa trên tùy chọn bạn chọn
+                                </small>
+                            </div>
+                            @foreach (var option in Model.ProductOptions)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">@option.Name:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var value in option.Values)
+                                        {
+                                            <input type="radio"
+                                                   class="btn-check option-radio"
+                                                   name="option_@option.ProductOptionId"
+                                                   id="option_@(option.ProductOptionId)_@(value.ProductOptionValueId)"
+                                                   value="@value.ProductOptionValueId"
+                                                   data-option-id="@option.ProductOptionId"
+                                                   data-price="@value.Price"
+                                                   autocomplete="off">
+                                            <label class="btn btn-outline-primary option-label" @* Màu viền và text là Nâu sữa đậm *@
+                                                   for="option_@(option.ProductOptionId)_@(value.ProductOptionValueId)">
+                                                <span class="fw-bold d-block">@value.Value</span>
+                                                @if (value.Price > 0)
+                                                {
+                                                    <small class="text-success d-block">@value.Price.ToString("N0")₫</small> @* Màu Xanh Matcha *@
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted d-block">Miễn phí</small>
+                                                }
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div id="priceDisplaySection" class="mb-3">
+                                <div id="priceBreakdownContainer" style="display: none;" class="mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <h6 class="mb-2">Chi tiết giá:</h6>
+                                            <div id="priceBreakdown"></div>
+                                            <hr class="my-2">
+                                            <div class="d-flex justify-content-between">
+                                                <strong>Tổng cộng:</strong>
+                                                <strong class="text-danger fs-5"><span id="totalPrice">0</span> VNĐ</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="dynamicPriceContainer" style="display: none;" class="mb-3">
+                                    <div class="card border-primary">
+                                        @* Viền card là Nâu sữa đậm *@
+                                        <div class="card-body py-3 text-center">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="h6 mb-0">Giá cho <span id="quantityDisplay">1</span> sản phẩm:</span>
+                                                <strong class="text-danger h4 mb-0">
+                                                    <span id="selectedPrice">0</span> VNĐ
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="variantInfo" class="mb-3">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-info-circle"></i> Vui lòng chọn đầy đủ các tùy chọn sản phẩm
+                                </div>
+                            </div>
+                            <hr class="my-3" />
+                        </div>
+                    }
+                    @if (totalStock > 0 && Model.Status)
+                    {
+                        <div id="addToCartSection">
+                            @if (Model.ProductOptions != null && Model.ProductOptions.Any())
+                            {
+                                <div id="variantCartSection" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-shopping-basket"></i> Số lượng:
+                                        </label>
+                                        <div class="d-flex align-items-center">
+                                            <div class="input-group me-3" style="max-width: 200px;">
+                                                <button class="btn btn-outline-secondary"
+                                                        type="button"
+                                                        id="decreaseBtn">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <input type="number"
+                                                       id="quantity"
+                                                       class="form-control text-center"
+                                                       value="1"
+                                                       min="1"
+                                                       max="999"
+                                                       readonly>
+                                                <button class="btn btn-outline-secondary"
+                                                        type="button"
+                                                        id="increaseBtn">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">Còn <span id="stockCount">0</span> sản phẩm</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button id="addToCartBtn" class="btn btn-lg btn-success" type="button">
+                                            @* Màu Xanh Matcha *@
+                                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-shopping-basket"></i> Số lượng:
+                                    </label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="input-group me-3" style="max-width: 200px;">
+                                            <button class="btn btn-outline-secondary"
+                                                    type="button"
+                                                    id="decreaseSimpleBtn">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number"
+                                                   id="simpleQuantity"
+                                                   class="form-control text-center"
+                                                   value="1"
+                                                   min="1"
+                                                   max="@totalStock"
+                                                   readonly>
+                                            <button class="btn btn-outline-secondary"
+                                                    type="button"
+                                                    id="increaseSimpleBtn">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Còn @totalStock sản phẩm</small>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button id="addSimpleToCartBtn" class="btn btn-lg btn-success" type="button">
+                                        @* Màu Xanh Matcha *@
+                                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
+                                    </button>
+                                </div>
+                            }
+                            <div class="d-grid mt-2">
+                                <button id="addToWishlistBtn" class="btn btn-outline-danger btn-lg" type="button">
+                                    <i class="far fa-heart"></i> Yêu thích
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Sản phẩm hiện đang <strong>hết hàng</strong> hoặc <strong>ngừng kinh doanh</strong>.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (relatedProducts != null && relatedProducts.Any())
+    {
+        <div class="mt-5">
+            <h4 class="mb-4 text-primary"><i class="fas fa-tags"></i> Sản phẩm liên quan</h4> @* Thêm text-primary *@
+            <div class="row">
+                @foreach (var product in relatedProducts.Take(4))
+                {
+                    var relatedImage = product.ProductImages?.FirstOrDefault(pi => pi.IsDefault)?.ImageUrl
+                    ?? product.ProductImages?.FirstOrDefault()?.ImageUrl
+                    ?? "/images/no-image.png";
+                    var relatedMinPrice = product.Variants?.Any() == true ? product.Variants.Min(v => v.UnitPrice) : 0;
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card h-100 product-card shadow-sm">
+                            <a asp-action="Details" asp-route-id="@product.ProductID">
+                                <img src="@relatedImage"
+                                     class="card-img-top"
+                                     alt="@product.ProductName"
+                                     style="height: 200px; object-fit: cover;">
+                            </a>
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a asp-action="Details" asp-route-id="@product.ProductID"
+                                       class="text-dark text-decoration-none">
+                                        @product.ProductName
+                                    </a>
+                                </h6>
+                                @if (relatedMinPrice > 0)
+                                {
+                                    <p class="text-primary mb-2 fw-bold">@relatedMinPrice.ToString("N0") VNĐ</p> @* text-primary là Nâu sữa đậm *@
+                                }
+                                <a asp-action="Details" asp-route-id="@product.ProductID"
+                                   class="btn btn-sm btn-outline-primary w-100">
+                                    @* btn-outline-primary là Nâu sữa đậm *@
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Global variables
+        var selectedVariant = null;
+        var maxStock = 0;
+        var productName = '@Html.Raw((Model.ProductName ?? "").Replace("\\", "\\\\").Replace("'", "\\'").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", " "))';
+        var totalStockValue = @totalStock;
+        var productId = @Model.ProductID;
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeProductDetails();
+        });
+
+        function initializeProductDetails() {
+            console.log('Initializing product details...');
+            // Initialize image gallery
+            initializeImageGallery();
+            // Initialize quantity controls
+            initializeQuantityControls();
+            // Initialize product options
+            initializeProductOptions();
+            // Initialize cart buttons
+            initializeCartButtons();
+        }
+
+        // Image gallery functionality
+        function initializeImageGallery() {
+            var thumbnails = document.querySelectorAll('.thumbnail-image');
+            for (var i = 0; i < thumbnails.length; i++) {
+                thumbnails[i].addEventListener('click', function() {
+                    var imageUrl = this.dataset.imageUrl;
+                    changeMainImage(imageUrl, this);
+                });
+            }
+        }
+
+        function changeMainImage(imageUrl, element) {
+            var mainImage = document.getElementById('mainImage');
+            if (mainImage) {
+                mainImage.src = imageUrl;
+            }
+            // Update thumbnail borders
+            var thumbnails = document.querySelectorAll('.thumbnail-image');
+            for (var i = 0; i < thumbnails.length; i++) {
+                thumbnails[i].classList.remove('border-primary');
+            }
+            element.classList.add('border-primary');
+        }
+
+        // Quantity controls
+        function initializeQuantityControls() {
+            // Variant quantity controls
+            var increaseBtn = document.getElementById('increaseBtn');
+            var decreaseBtn = document.getElementById('decreaseBtn');
+            var quantityInput = document.getElementById('quantity');
+
+            if (increaseBtn && decreaseBtn && quantityInput) {
+                increaseBtn.addEventListener('click', function() {
+                    increaseQuantity();
+                });
+                decreaseBtn.addEventListener('click', function() {
+                    decreaseQuantity();
+                });
+            }
+
+            // Simple quantity controls
+            var increaseSimpleBtn = document.getElementById('increaseSimpleBtn');
+            var decreaseSimpleBtn = document.getElementById('decreaseSimpleBtn');
+            var simpleQuantityInput = document.getElementById('simpleQuantity');
+
+            if (increaseSimpleBtn && decreaseSimpleBtn && simpleQuantityInput) {
+                increaseSimpleBtn.addEventListener('click', function() {
+                    increaseSimpleQuantity();
+                });
+                decreaseSimpleBtn.addEventListener('click', function() {
+                    decreaseSimpleQuantity();
+                });
+            }
+        }
+
+        function increaseQuantity() {
+            var input = document.getElementById('quantity');
+            if (!input) return;
+            var current = parseInt(input.value) || 1;
+            var max = parseInt(input.getAttribute('max')) || maxStock || 999;
+
+            if (current < max) {
+                input.value = current + 1;
+                updatePriceDisplay();
+            }
+        }
+
+        function decreaseQuantity() {
+            var input = document.getElementById('quantity');
+            if (!input) return;
+            var current = parseInt(input.value) || 1;
+
+            if (current > 1) {
+                input.value = current - 1;
+                updatePriceDisplay();
+            }
+        }
+
+        function increaseSimpleQuantity() {
+            var input = document.getElementById('simpleQuantity');
+            if (!input) return;
+            var current = parseInt(input.value) || 1;
+            var max = parseInt(input.getAttribute('max')) || 999;
+
+            if (current < max) {
+                input.value = current + 1;
+            }
+        }
+
+        function decreaseSimpleQuantity() {
+            var input = document.getElementById('simpleQuantity');
+            if (!input) return;
+            var current = parseInt(input.value) || 1;
+
+            if (current > 1) {
+                input.value = current - 1;
+            }
+        }
+
+        // Product options functionality
+        function initializeProductOptions() {
+            var optionRadios = document.querySelectorAll('.option-radio');
+            for (var i = 0; i < optionRadios.length; i++) {
+                optionRadios[i].addEventListener('change', handleOptionChange);
+            }
+
+            // Initial check
+            var totalOptions = @(Model.ProductOptions?.Count ?? 0);
+            if (totalOptions > 0) {
+                checkSelectedOptions();
+            }
+        }
+
+        function handleOptionChange() {
+            updatePriceDisplay();
+            checkSelectedOptions();
+        }
+
+        function getSelectedOptions() {
+            var selectedOptions = {};
+            var radios = document.querySelectorAll('.option-radio:checked');
+
+            for (var i = 0; i < radios.length; i++) {
+                var radio = radios[i];
+                var optionId = parseInt(radio.dataset.optionId);
+                var valueId = parseInt(radio.value);
+                selectedOptions[optionId] = valueId;
+            }
+            return selectedOptions;
+        }
+
+        function calculatePrice() {
+            var selectedOptions = getSelectedOptions();
+            var totalPrice = 0;
+            var breakdown = [];
+            var radios = document.querySelectorAll('.option-radio:checked');
+
+            for (var i = 0; i < radios.length; i++) {
+                var radio = radios[i];
+                var price = parseFloat(radio.dataset.price) || 0;
+                var label = document.querySelector('label[for="' + radio.id + '"]');
+                var optionText = 'Tùy chọn';
+
+                if (label) {
+                    var span = label.querySelector('span');
+                    if (span && span.textContent) {
+                        optionText = span.textContent.trim();
+                    }
+                }
+
+                if (price > 0) {
+                    totalPrice += price;
+                    breakdown.push({ name: optionText, price: price });
+                }
+            }
+
+            return { totalPrice: totalPrice, breakdown: breakdown };
+        }
+
+        function updatePriceDisplay() {
+            var priceData = calculatePrice();
+            var totalPrice = priceData.totalPrice;
+            var breakdown = priceData.breakdown;
+            var quantityInput = document.getElementById('quantity');
+            var quantity = quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
+
+            // Update price breakdown
+            if (breakdown.length > 0) {
+                var breakdownHtml = '';
+                for (var i = 0; i < breakdown.length; i++) {
+                    var item = breakdown[i];
+                    breakdownHtml += '<div class="d-flex justify-content-between">' +
+                        '<span>' + item.name + '</span>' +
+                        '<span>' + item.price.toLocaleString('vi-VN') + '₫</span>' +
+                        '</div>';
+                }
+
+                var priceBreakdownEl = document.getElementById('priceBreakdown');
+                var totalPriceEl = document.getElementById('totalPrice');
+                var priceBreakdownContainer = document.getElementById('priceBreakdownContainer');
+
+                if (priceBreakdownEl) priceBreakdownEl.innerHTML = breakdownHtml;
+                if (totalPriceEl) totalPriceEl.textContent = totalPrice.toLocaleString('vi-VN');
+                if (priceBreakdownContainer) priceBreakdownContainer.style.display = 'block';
+            } else {
+                var priceBreakdownContainer = document.getElementById('priceBreakdownContainer');
+                if (priceBreakdownContainer) priceBreakdownContainer.style.display = 'none';
+            }
+
+            // Update main price display
+            if (totalPrice > 0) {
+                var finalPrice = totalPrice * quantity;
+                var selectedPriceEl = document.getElementById('selectedPrice');
+                var quantityDisplayEl = document.getElementById('quantityDisplay');
+                var dynamicPriceContainer = document.getElementById('dynamicPriceContainer');
+
+                if (selectedPriceEl) selectedPriceEl.textContent = finalPrice.toLocaleString('vi-VN');
+                if (quantityDisplayEl) quantityDisplayEl.textContent = quantity;
+                if (dynamicPriceContainer) dynamicPriceContainer.style.display = 'block';
+            } else {
+                var dynamicPriceContainer = document.getElementById('dynamicPriceContainer');
+                if (dynamicPriceContainer) dynamicPriceContainer.style.display = 'none';
+            }
+        }
+
+        function checkSelectedOptions() {
+            var totalOptions = @(Model.ProductOptions?.Count ?? 0);
+            var selectedCount = document.querySelectorAll('.option-radio:checked').length;
+            var allSelected = (totalOptions === selectedCount);
+
+            var variantCartSection = document.getElementById('variantCartSection');
+            var variantInfo = document.getElementById('variantInfo');
+
+            if (allSelected && totalOptions > 0) {
+                if (variantCartSection) variantCartSection.style.display = 'block';
+                if (variantInfo) {
+                    // Cập nhật thông báo đã chọn
+                    variantInfo.innerHTML = '<div class="alert alert-success">' +
+                        '<i class="fas fa-check-circle"></i> Đã chọn đầy đủ tùy chọn. Có thể thêm vào giỏ hàng!' +
+                        '</div>';
+                }
+                loadVariantInfo();
+            } else {
+                if (variantCartSection) variantCartSection.style.display = 'none';
+                if (totalOptions > 0 && variantInfo) {
+                    // Cập nhật thông báo cần chọn thêm
+                    variantInfo.innerHTML = '<div class="alert alert-warning">' +
+                        '<i class="fas fa-info-circle"></i> Vui lòng chọn đầy đủ các tùy chọn sản phẩm (' + selectedCount + '/' + totalOptions + ')' +
+                        '</div>';
+                }
+            }
+        }
+
+        function loadVariantInfo() {
+            var selectedOptions = getSelectedOptions();
+
+            fetch('@Url.Action("GetVariantByOptions", "Products")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId: productId,
+                    selectedOptions: selectedOptions
+                })
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    selectedVariant = {
+                        productVariantId: data.variantId,
+                        sku: data.sku,
+                        stock: data.stock,
+                        price: data.price
+                    };
+                    maxStock = data.stock;
+
+                    var quantityInput = document.getElementById('quantity');
+                    if (quantityInput) {
+                        quantityInput.value = 1;
+                        quantityInput.setAttribute('max', data.stock);
+                    }
+
+                    var stockCountEl = document.getElementById('stockCount');
+                    if (stockCountEl) stockCountEl.textContent = data.stock;
+
+                    var variantInfo = document.getElementById('variantInfo');
+                    if (variantInfo) {
+                        // Cập nhật thông tin SKU và Tồn kho trong alert-success (Xanh Matcha)
+                        variantInfo.innerHTML = '<div class="alert alert-success">' +
+                            '<div class="d-flex justify-content-between">' +
+                            '<span><i class="fas fa-check-circle"></i> Mã SKU: ' + data.sku + '</span>' +
+                            '<span><i class="fas fa-warehouse"></i> Còn ' + data.stock + ' sản phẩm</span>' +
+                            '</div>' +
+                            '</div>';
+                    }
+
+                    updatePriceDisplay();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading variant info:', error);
+            });
+        }
+
+        // Cart functionality
+        function initializeCartButtons() {
+            var addToCartBtn = document.getElementById('addToCartBtn');
+            var addSimpleToCartBtn = document.getElementById('addSimpleToCartBtn');
+            var addToWishlistBtn = document.getElementById('addToWishlistBtn');
+
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', addToCart);
+            }
+            if (addSimpleToCartBtn) {
+                addSimpleToCartBtn.addEventListener('click', addSimpleProductToCart);
+            }
+            if (addToWishlistBtn) {
+                addToWishlistBtn.addEventListener('click', addToWishlist);
+            }
+        }
+
+        // ✅ FIX: Sửa function addToCart - Gọi đến Cart/AddVariant thay vì Products/AddToCart
+        function addToCart() {
+            if (!selectedVariant || selectedVariant.stock <= 0) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Vui lòng chọn biến thể hợp lệ và có sẵn hàng.');
+                } else {
+                    alert('Vui lòng chọn biến thể hợp lệ và có sẵn hàng.');
+                }
+                return;
+            }
+
+            var quantity = parseInt(document.getElementById('quantity').value || 1);
+
+            if (quantity > selectedVariant.stock) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Số lượng bạn chọn vượt quá số lượng tồn kho (' + selectedVariant.stock + ').');
+                } else {
+                    alert('Số lượng bạn chọn vượt quá số lượng tồn kho (' + selectedVariant.stock + ').');
+                }
+                return;
+            }
+
+            // ✅ FIXED: Gọi đúng endpoint Cart/AddVariant
+            fetch('@Url.Action("AddVariant", "Cart")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({
+                    variantId: selectedVariant.productVariantId,
+                    quantity: quantity
+                })
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success('Đã thêm ' + quantity + ' sản phẩm ' + selectedVariant.sku + ' vào giỏ hàng!');
+                    } else {
+                        alert('Đã thêm ' + quantity + ' sản phẩm ' + selectedVariant.sku + ' vào giỏ hàng!');
+                    }
+
+                    // ✅ Cập nhật cart count
+                    if (data.cartCount !== undefined) {
+                        var cartCountEl = document.getElementById('cart-count');
+                        if (cartCountEl) {
+                            cartCountEl.textContent = data.cartCount;
+                        }
+                    }
+                } else {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Lỗi: ' + data.message);
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Error adding to cart:', error);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                } else {
+                    alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                }
+            });
+        }
+
+        // ✅ FIX: Thêm method AddToCartSimple vào CartController hoặc sửa logic
+        function addSimpleProductToCart() {
+            var quantity = parseInt(document.getElementById('simpleQuantity').value || 1);
+
+            if (quantity <= 0 || quantity > totalStockValue) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Số lượng phải từ 1 đến ' + totalStockValue + '.');
+                } else {
+                    alert('Số lượng phải từ 1 đến ' + totalStockValue + '.');
+                }
+                return;
+            }
+
+            // ✅ CÁCH 1: Tạm thời disable cho sản phẩm simple (không có variants)
+            if (typeof toastr !== 'undefined') {
+                toastr.info('Tính năng thêm sản phẩm đơn giản đang được phát triển!');
+            } else {
+                alert('Tính năng thêm sản phẩm đơn giản đang được phát triển!');
+            }
+
+            // ✅ CÁCH 2: Hoặc có thể redirect về trang liên hệ
+            // window.location.href = '/Home/Contact';
+        }
+
+        function addToWishlist() {
+            if (typeof toastr !== 'undefined') {
+                toastr.info('Chức năng Yêu thích đang được phát triển!');
+            } else {
+                alert('Chức năng Yêu thích đang được phát triển!');
+            }
+        }
+    </script>
+}
+
+
+@section Styles {
+    <style>
+        /* Định nghĩa biến CSS cho bảng màu mới */
+        :root {
+            --primary-color: #6C4E31; /* Nâu sữa đậm */
+            --secondary-color: #DCC5A1; /* Be kem nhạt */
+            --background-light: #F5E9DA; /* Nền kem sáng */
+            --accent-color: #8BC34A; /* Xanh matcha nhẹ */
+            --text-color: #2A2A2A; /* Đen xám */
+            --muted-color: #7d7d7d; /* Xám cho chữ phụ */
+        }
+
+        /* Áp dụng màu nền chung */
+        body {
+            background-color: var(--background-light);
+        }
+
+        /* Màu chữ chung */
+        h1, h2, h3, h4, h5, h6, p, a, strong, td, label {
+            color: var(--text-color);
+        }
+
+        /* Cập nhật màu cho các thành phần Bootstrap */
+
+        /* Màu chính (Primary): Tiêu đề, nút chính, viền ảnh được chọn */
+        .text-primary,
+        .border-primary,
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        .btn-primary { /* Nếu có dùng, nhưng ở đây dùng outline */
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+            /* Hiệu ứng chọn/hover cho button outline và radio option */
+            .btn-outline-primary:hover,
+            .option-radio:checked + .option-label {
+                background-color: var(--primary-color) !important;
+                color: white !important;
+                border-color: var(--primary-color) !important;
+            }
+
+                .option-radio:checked + .option-label small {
+                    color: white !important; /* Đảm bảo chữ nhỏ trong label đổi màu khi được chọn */
+                }
+
+        /* Màu phụ (Secondary): Badge, nền card nổi bật */
+        .bg-primary { /* Màu nền primary cũ (dùng cho card header nếu không custom) */
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        .bg-info, .badge.bg-info,
+        .bg-secondary, .badge.bg-secondary { /* Sử dụng màu phụ cho Danh mục/Thương hiệu/Trạng thái phụ */
+            background-color: var(--secondary-color) !important;
+            color: var(--primary-color) !important;
+        }
+
+        .card.border-primary { /* Sử dụng màu chính cho viền card Giá động */
+            border-color: var(--primary-color) !important;
+        }
+
+        /* Cấu hình lại card-header cho phong cách nhẹ nhàng */
+        .card-header {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            font-weight: bold;
+            border-bottom: 1px solid var(--primary-color);
+        }
+
+        /* Màu Success (Accent): Tồn kho, nút Thêm vào giỏ hàng, thông báo Success */
+        .bg-success, .badge.bg-success, .alert-success {
+            background-color: var(--accent-color) !important; /* Xanh Matcha */
+            color: var(--text-color) !important; /* Đổi màu chữ để dễ đọc trên nền xanh nhẹ */
+        }
+
+        .text-success {
+            color: var(--accent-color) !important;
+        }
+
+        .alert-success {
+            border-color: #799a57; /* Viền đậm hơn một chút */
+        }
+
+        .btn-success {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+            color: var(--text-color) !important;
+            font-weight: bold;
+        }
+
+            .btn-success:hover {
+                background-color: #799a57 !important; /* Màu tối hơn khi hover */
+                border-color: #799a57 !important;
+            }
+
+        /* Các thành phần khác */
+        .card {
+            border-color: var(--secondary-color);
+            background-color: white; /* Nền card trắng để nổi bật */
+        }
+
+        .text-muted, .text-secondary {
+            color: var(--muted-color) !important;
+        }
+
+        .alert-light { /* Thay đổi màu alert light cho khu vực tùy chọn */
+            background-color: var(--background-light) !important;
+            border: 1px dashed var(--secondary-color);
+            color: var(--text-color) !important;
+        }
+
+        .option-label {
+            border: 2px solid var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .option-radio:checked + .option-label {
+            border: 2px solid var(--primary-color);
+        }
+
+        .thumbnail-image:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color) !important; /* Đổi thành màu chính mới */
+        }
+
+        /* Giữ lại hiệu ứng chuyển động */
+        .main-product-image {
+            transition: transform 0.3s ease;
+        }
+
+        .thumbnail-image {
+            transition: all 0.3s ease;
+            border: 2px solid transparent !important;
+        }
+
+        .product-card {
+            transition: transform 0.3s ease;
+        }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+            }
+
+        .description-content {
+            line-height: 1.6;
+        }
+
+        .option-label {
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .option-label:hover {
+                transform: translateY(-2px);
+            }
+
+        .btn {
+            transition: all 0.3s ease;
+        }
+        /* Fix alert-warning */
+        .alert-warning {
+            background-color: #fce8d5; /* Màu vàng nhạt hơn */
+            color: var(--primary-color);
+            border-color: #f4d0a9;
+        }
+
+    </style>
+}

@@ -1,0 +1,55 @@
+﻿@using DrinShop.Models
+@model Category
+@{
+    ViewData["Title"] = "Thêm danh mục";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus"></i> Thêm danh mục mới
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Save" method="post">
+                    <input type="hidden" asp-for="CategoryID" />
+                    <input type="hidden" asp-for="CreatedBy" />
+                    
+                    <div class="mb-3">
+                        <label asp-for="CategoryName" class="form-label">Tên danh mục</label>
+                        <input asp-for="CategoryName" class="form-control" required />
+                        <span asp-validation-for="CategoryName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="Status" class="form-check-input" type="checkbox" />
+                        <label asp-for="Status" class="form-check-label">Kích hoạt</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Lưu
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+

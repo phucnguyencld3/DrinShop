@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Truy cập bị từ chối";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h1 class="display-1 text-danger">🚫</h1>
+                    <h2 class="mb-3">Truy cập bị từ chối</h2>
+                    <p class="text-muted mb-4">
+                        Bạn không có quyền truy cập trang này.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                            Về trang chủ
+                        </a>
+                        <a asp-action="Login" class="btn btn-outline-secondary">
+                            Đăng nhập với tài khoản khác
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

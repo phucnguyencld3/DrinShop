@@ -1,0 +1,596 @@
+﻿@model DrinShop.Models.ProductOption
+@{
+    ViewData["Title"] = Model.ProductOptionId == 0 ? "Thêm thuộc tính sản phẩm" : "Sửa thuộc tính sản phẩm";
+    var product = ViewData["Product"] as DrinShop.Models.Product;
+    var isEditMode = Model.ProductOptionId > 0;
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1">
+                <i class="fas fa-gear text-primary"></i>
+                @ViewData["Title"]
+            </h2>
+            <p class="text-muted mb-0">
+                Sản phẩm: <strong>@product.ProductName</strong>
+                <span class="badge bg-info ms-2">@product.Code</span>
+            </p>
+        </div>
+        <div>
+            <a asp-action="Index" asp-route-productId="@Model.ProductId" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <form asp-action="Save" method="post" id="optionForm" class="needs-validation" novalidate>
+        <input asp-for="ProductOptionId" type="hidden" />
+        <input asp-for="ProductId" type="hidden" />
+
+        <div class="row">
+            <!-- Left Column: Basic Information -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Thông tin cơ bản
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Option Name -->
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">
+                                Tên thuộc tính <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="VD: Kích thước, Màu sắc, Topping..." required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="invalid-feedback">
+                                Vui lòng nhập tên thuộc tính
+                            </div>
+                        </div>
+
+                        <!-- Price Modifier (Optional - for backward compatibility) -->
+                        <div class="mb-3">
+                            <label asp-for="PriceModifer" class="form-label fw-bold">
+                                Điều chỉnh giá chung
+                                <i class="fas fa-question-circle text-muted" data-bs-toggle="tooltip"
+                                   title="Điều chỉnh giá chung cho tất cả giá trị của thuộc tính này (tùy chọn)"></i>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="PriceModifer" class="form-control" type="number" step="1000" value="0" />
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                            <small class="text-muted">
+                                Để trống hoặc 0 nếu sử dụng giá riêng cho từng giá trị
+                            </small>
+                        </div>
+
+                        <!-- Statistics (if edit mode) -->
+                        @if (isEditMode)
+                        {
+                            <div class="alert alert-light border-start border-4 border-info">
+                                <h6 class="alert-heading mb-2">
+                                    <i class="fas fa-chart-line"></i> Thống kê
+                                </h6>
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="fw-bold text-primary">@Model.Values.Count</div>
+                                        <small class="text-muted">Giá trị</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="fw-bold text-success">@Model.Values.Sum(v => v.Price).ToString("N0")₫</div>
+                                        <small class="text-muted">Tổng giá</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="text-info">
+                            <i class="fas fa-lightbulb"></i> Hướng dẫn
+                        </h6>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Mỗi giá trị có thể có giá riêng
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Giá variant = tổng giá option values
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Có thể để giá 0 cho option miễn phí
+                            </li>
+                            <li>
+                                <i class="fas fa-check text-success me-2"></i>
+                                Xóa giá trị sẽ ảnh hưởng variants
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Option Values -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list"></i> Giá trị thuộc tính
+                            </h5>
+                            <button type="button" class="btn btn-light btn-sm" id="addValueBtn">
+                                <i class="fas fa-plus"></i> Thêm giá trị
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Validation Summary -->
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+
+                        <!-- Values Container -->
+                        <div id="valuesContainer">
+                            @if (Model.Values != null && Model.Values.Any())
+                            {
+                                @for (int i = 0; i < Model.Values.Count; i++)
+                                {
+                                    var value = Model.Values.ElementAt(i);
+                                    <div class="value-row mb-3 p-3 border rounded bg-light">
+                                        <div class="row align-items-end">
+                                            <div class="col-md-5">
+                                                <label class="form-label fw-bold">Tên giá trị</label>
+                                                <input name="values[@i]" value="@value.Value"
+                                                       class="form-control" placeholder="VD: Small, Medium, Large..." required />
+                                                <div class="invalid-feedback">Vui lòng nhập tên giá trị</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold">
+                                                    Giá riêng
+                                                    <i class="fas fa-info-circle text-muted" data-bs-toggle="tooltip"
+                                                       title="Giá sẽ được cộng vào tổng giá variant"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input name="prices[@i]" value="@value.Price"
+                                                           class="form-control price-input" type="number" step="1000" placeholder="0" />
+                                                    <span class="input-group-text">VNĐ</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">&nbsp;</label>
+                                                <div>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-value w-100"
+                                                            data-bs-toggle="tooltip" title="Xóa giá trị">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">&nbsp;</label>
+                                                <div>
+                                                    <span class="drag-handle text-muted" style="cursor: move;"
+                                                          data-bs-toggle="tooltip" title="Kéo để sắp xếp">
+                                                        <i class="fas fa-grip-vertical"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Preview -->
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                Hiển thị:
+                                                <span class="badge bg-primary preview-badge">
+                                                    <span class="value-preview">@value.Value</span>
+                                                    @if (value.Price > 0)
+                                                    {
+                                                        <span class="price-preview"> (+@value.Price.ToString("N0")₫)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="price-preview text-muted"> (miễn phí)</span>
+                                                    }
+                                                </span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <!-- Empty state -->
+                                <div class="text-center py-5" id="emptyState">
+                                    <i class="fas fa-plus-circle text-muted" style="font-size: 3rem;"></i>
+                                    <h5 class="text-muted mt-3">Chưa có giá trị thuộc tính</h5>
+                                    <p class="text-muted">Nhấn "Thêm giá trị" để bắt đầu</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Quick Add Section -->
+                        <div class="card border-dashed mt-3" id="quickAddSection" style="display: none;">
+                            <div class="card-body">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-bolt"></i> Thêm nhanh nhiều giá trị
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <textarea id="quickAddInput" class="form-control" rows="3"
+                                                  placeholder="Nhập mỗi giá trị trên một dòng:&#10;Small&#10;Medium&#10;Large"></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label">Giá mặc định</label>
+                                            <div class="input-group">
+                                                <input id="quickAddPrice" class="form-control" type="number" step="1000" value="0" />
+                                                <span class="input-group-text">VNĐ</span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-primary w-100" id="quickAddBtn">
+                                            <i class="fas fa-plus"></i> Thêm tất cả
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button" class="btn btn-outline-info" id="toggleQuickAdd">
+                                <i class="fas fa-magic"></i> Thêm nhanh
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="sortValues">
+                                <i class="fas fa-sort-alpha-down"></i> Sắp xếp A-Z
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" id="duplicateCheck">
+                                <i class="fas fa-search"></i> Kiểm tra trùng lặp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="fas fa-save text-success"></i>
+                                    @(isEditMode ? "Cập nhật thuộc tính" : "Tạo thuộc tính mới")
+                                </h6>
+                                <small class="text-muted">
+                                    <span id="valueCount">@(Model.Values?.Count ?? 0)</span> giá trị •
+                                    Tổng giá: <span id="totalPrice">@(Model.Values?.Sum(v => v.Price) ?? 0)</span>₫
+                                </small>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                                    <i class="fas fa-save"></i>
+                                    @(isEditMode ? "Cập nhật" : "Tạo mới")
+                                </button>
+                                <a asp-action="Index" asp-route-productId="@Model.ProductId"
+                                   class="btn btn-outline-secondary btn-lg ms-2">
+                                    <i class="fas fa-times"></i> Hủy
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let valueIndex = @(Model.Values?.Count ?? 0);
+
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Initialize sortable
+            new Sortable(document.getElementById('valuesContainer'), {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function() {
+                    updateIndices();
+                }
+            });
+
+            // Add single value
+            $('#addValueBtn').click(function() {
+                addValueRow('', 0);
+                updateStats();
+                hideEmptyState();
+            });
+
+            // Remove value
+            $(document).on('click', '.remove-value', function() {
+                if ($('.value-row').length > 1) {
+                    $(this).closest('.value-row').fadeOut(300, function() {
+                        $(this).remove();
+                        updateIndices();
+                        updateStats();
+                        showEmptyStateIfNeeded();
+                    });
+                } else {
+                    alert('Phải có ít nhất một giá trị!');
+                }
+            });
+
+            // Real-time preview updates
+            $(document).on('input', 'input[name^="values"]', function() {
+                const row = $(this).closest('.value-row');
+                const value = $(this).val();
+                row.find('.value-preview').text(value || 'Chưa nhập');
+            });
+
+            $(document).on('input', '.price-input', function() {
+                const row = $(this).closest('.value-row');
+                const price = parseFloat($(this).val()) || 0;
+                const pricePreview = row.find('.price-preview');
+
+                if (price > 0) {
+                    pricePreview.html(` (+${price.toLocaleString('vi-VN')}₫)`);
+                    pricePreview.removeClass('text-muted');
+                } else {
+                    pricePreview.html(' (miễn phí)');
+                    pricePreview.addClass('text-muted');
+                }
+
+                updateStats();
+            });
+
+            // Quick add toggle
+            $('#toggleQuickAdd').click(function() {
+                $('#quickAddSection').toggle();
+                const isVisible = $('#quickAddSection').is(':visible');
+                $(this).html(isVisible ?
+                    '<i class="fas fa-times"></i> Đóng' :
+                    '<i class="fas fa-magic"></i> Thêm nhanh'
+                );
+            });
+
+            // Quick add functionality
+            $('#quickAddBtn').click(function() {
+                const input = $('#quickAddInput').val().trim();
+                const defaultPrice = parseFloat($('#quickAddPrice').val()) || 0;
+
+                if (!input) {
+                    alert('Vui lòng nhập các giá trị!');
+                    return;
+                }
+
+                const values = input.split('\n').filter(v => v.trim());
+                values.forEach(value => {
+                    addValueRow(value.trim(), defaultPrice);
+                });
+
+                $('#quickAddInput').val('');
+                $('#quickAddPrice').val(0);
+                $('#quickAddSection').hide();
+                $('#toggleQuickAdd').html('<i class="fas fa-magic"></i> Thêm nhanh');
+
+                updateStats();
+                hideEmptyState();
+            });
+
+            // Sort values
+            $('#sortValues').click(function() {
+                const rows = $('.value-row').toArray();
+                rows.sort((a, b) => {
+                    const aValue = $(a).find('input[name^="values"]').val().toLowerCase();
+                    const bValue = $(b).find('input[name^="values"]').val().toLowerCase();
+                    return aValue.localeCompare(bValue);
+                });
+
+                $('#valuesContainer').empty().append(rows);
+                updateIndices();
+            });
+
+            // Duplicate check
+            $('#duplicateCheck').click(function() {
+                const values = [];
+                const duplicates = [];
+
+                $('input[name^="values"]').each(function() {
+                    const value = $(this).val().trim().toLowerCase();
+                    if (value && values.includes(value)) {
+                        duplicates.push(value);
+                    } else if (value) {
+                        values.push(value);
+                    }
+                });
+
+                if (duplicates.length > 0) {
+                    alert(`Tìm thấy giá trị trùng lặp: ${duplicates.join(', ')}`);
+                } else {
+                    alert('Không có giá trị trùng lặp!');
+                }
+            });
+
+            // Form validation
+            $('#optionForm').submit(function(e) {
+                let isValid = true;
+                const values = [];
+
+                // Check required fields
+                $('input[name^="values"]').each(function() {
+                    const value = $(this).val().trim();
+                    if (!value) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                        values.push(value.toLowerCase());
+                    }
+                });
+
+                // Check duplicates
+                const uniqueValues = [...new Set(values)];
+                if (values.length !== uniqueValues.length) {
+                    isValid = false;
+                    alert('Có giá trị bị trùng lặp!');
+                }
+
+                // Check minimum values
+                if (values.length === 0) {
+                    isValid = false;
+                    alert('Phải có ít nhất một giá trị!');
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    $(this).addClass('was-validated');
+                }
+            });
+
+            // Helper functions
+            function addValueRow(value = '', price = 0) {
+                const newRow = `
+                    <div class="value-row mb-3 p-3 border rounded bg-light" style="display: none;">
+                        <div class="row align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold">Tên giá trị</label>
+                                <input name="values[${valueIndex}]" value="${value}"
+                                       class="form-control" placeholder="VD: Small, Medium, Large..." required />
+                                <div class="invalid-feedback">Vui lòng nhập tên giá trị</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">
+                                    Giá riêng
+                                    <i class="fas fa-info-circle text-muted" data-bs-toggle="tooltip"
+                                       title="Giá sẽ được cộng vào tổng giá variant"></i>
+                                </label>
+                                <div class="input-group">
+                                    <input name="prices[${valueIndex}]" value="${price}"
+                                           class="form-control price-input" type="number" step="1000" placeholder="0" />
+                                    <span class="input-group-text">VNĐ</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-value w-100"
+                                            data-bs-toggle="tooltip" title="Xóa giá trị">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <span class="drag-handle text-muted" style="cursor: move;"
+                                          data-bs-toggle="tooltip" title="Kéo để sắp xếp">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Hiển thị:
+                                <span class="badge bg-primary preview-badge">
+                                    <span class="value-preview">${value || 'Chưa nhập'}</span>
+                                    <span class="price-preview ${price > 0 ? '' : 'text-muted'}">${price > 0 ? ` (+${price.toLocaleString('vi-VN')}₫)` : ' (miễn phí)'}</span>
+                                </span>
+                            </small>
+                        </div>
+                    </div>`;
+
+                $('#valuesContainer').append(newRow);
+                $('.value-row:last').fadeIn(300);
+                $('[data-bs-toggle="tooltip"]').tooltip();
+                valueIndex++;
+            }
+
+            function updateIndices() {
+                $('.value-row').each(function(index) {
+                    $(this).find('input[name^="values"]').attr('name', `values[${index}]`);
+                    $(this).find('input[name^="prices"]').attr('name', `prices[${index}]`);
+                });
+            }
+
+            function updateStats() {
+                const count = $('.value-row').length;
+                const total = $('.price-input').toArray().reduce((sum, input) => {
+                    return sum + (parseFloat($(input).val()) || 0);
+                }, 0);
+
+                $('#valueCount').text(count);
+                $('#totalPrice').text(total.toLocaleString('vi-VN'));
+            }
+
+            function hideEmptyState() {
+                $('#emptyState').hide();
+            }
+
+            function showEmptyStateIfNeeded() {
+                if ($('.value-row').length === 0) {
+                    $('#emptyState').show();
+                }
+            }
+
+            // Initialize stats
+            updateStats();
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .border-dashed {
+            border: 2px dashed #dee2e6 !important;
+        }
+
+        .value-row {
+            transition: all 0.3s ease;
+        }
+
+            .value-row:hover {
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                transform: translateY(-2px);
+            }
+
+        .drag-handle:hover {
+            color: #007bff !important;
+        }
+
+        .preview-badge {
+            font-size: 0.8em;
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .card {
+            transition: box-shadow 0.3s ease;
+        }
+
+            .card:hover {
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            }
+
+        .border-start {
+            border-left: 4px solid !important;
+        }
+
+        #emptyState i {
+            opacity: 0.5;
+        }
+    </style>
+}

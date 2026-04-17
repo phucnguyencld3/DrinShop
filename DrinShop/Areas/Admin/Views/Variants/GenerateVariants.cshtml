@@ -1,0 +1,435 @@
+﻿@model List<DrinShop.Services.VariantCombination>
+@{
+    ViewData["Title"] = "Tạo biến thể tự động";
+    var productId = ViewBag.ProductId;
+    var productName = ViewBag.ProductName;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-magic"></i>
+                        Tạo biến thể tự động cho sản phẩm: <strong>@productName</strong>
+                    </h3>
+                    <div class="card-tools">
+                        <a asp-action="Index" asp-route-id="@productId" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Hệ thống đã tạo ra <strong>@Model.Count</strong> tổ hợp biến thể từ các thuộc tính sản phẩm.
+                            <strong>Giá sẽ được tính tự động từ tổng giá các Option Values.</strong>
+                        </div>
+
+                        <!-- ✅ Thêm thông tin giá option values -->
+                        <div class="alert alert-warning mb-3">
+                            <h6><strong>Thông tin giá Option Values:</strong></h6>
+                            <div id="optionPricesInfo">Đang tải...</div>
+                        </div>
+
+                        <form id="generateVariantsForm">
+                            <input type="hidden" name="productId" value="@productId" />
+
+                            <!-- Control Panel -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary" id="selectAllBtn">
+                                            <i class="fas fa-check-square"></i> Chọn tất cả
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="deselectAllBtn">
+                                            <i class="fas fa-square"></i> Bỏ chọn tất cả
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- ❌ XÓA PHẦN GIÁ CƠ SỞ -->
+                                <div class="col-md-6 text-right">
+                                    <button type="button" class="btn btn-info" id="refreshPricesBtn">
+                                        <i class="fas fa-calculator"></i> Tính lại giá
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Variants Table -->
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th width="50">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="masterCheckbox">
+                                                    <label class="form-check-label" for="masterCheckbox"></label>
+                                                </div>
+                                            </th>
+                                            <th>Tên biến thể</th>
+                                            <th>Thuộc tính</th>
+                                            <th width="150">Giá bán (VNĐ)</th> <!-- ✅ Tăng width -->
+                                            <th width="100">Tồn kho</th>
+                                            <th width="120">SKU</th>
+                                            <th width="200">Mô tả</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Model.Count; i++)
+                                        {
+                                            var combination = Model[i];
+
+                                            <tr class="variant-row" data-variant-index="@i">
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input variant-checkbox"
+                                                               id="variant_@i" data-index="@i">
+                                                        <label class="form-check-label" for="variant_@i"></label>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <input type="text" class="form-control form-control-sm variant-name"
+                                                           data-index="@i" value="@combination.Name"
+                                                           placeholder="Tên biến thể">
+                                                </td>
+
+                                                <td>
+                                                    <div class="variant-options">
+                                                        @foreach (var value in combination.Values)
+                                                        {
+                                                            <span class="badge badge-primary mr-1">
+                                                                @value.ProductOption.Name: @value.Value
+                                                                @if (value.Price > 0)
+                                                                {
+                                                                    <small>(+@value.Price.ToString("N0")₫)</small>
+                                                                }
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                    <!-- Hidden fields for option value IDs -->
+                                                    @for (int j = 0; j < combination.OptionValueIds.Count; j++)
+                                                    {
+                                                        <input type="hidden" class="option-value-id" data-index="@i" data-option-index="@j" value="@combination.OptionValueIds[j]">
+                                                    }
+                                                </td>
+
+                                                <!-- ✅ GIÁ TỰ ĐỘNG TÍNH TOÁN -->
+                                                <td>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control form-control-sm price-input"
+                                                               data-index="@i" value="0"
+                                                               readonly style="background-color: #f8f9fa;">
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">₫</span>
+                                                        </div>
+                                                    </div>
+                                                    <small class="text-muted">Tự động tính</small>
+                                                </td>
+
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm stock-input"
+                                                           data-index="@i" value="0"
+                                                           min="0" placeholder="0">
+                                                </td>
+
+                                                <td>
+                                                    <input type="text" class="form-control form-control-sm sku-input"
+                                                           data-index="@i" value=""
+                                                           placeholder="Tự động">
+                                                </td>
+
+                                                <td>
+                                                    <textarea class="form-control form-control-sm description-input"
+                                                              data-index="@i" rows="1"
+                                                              placeholder="Mô tả (tùy chọn)"></textarea>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Submit Panel -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <p class="mb-3">
+                                                <span id="selectedCount">0</span> biến thể được chọn trong tổng số @Model.Count biến thể
+                                            </p>
+                                            <button type="submit" class="btn btn-success btn-lg" id="createVariantsBtn" disabled>
+                                                <i class="fas fa-plus-circle"></i>
+                                                Tạo biến thể đã chọn
+                                            </button>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    Giá sẽ được tính tự động từ tổng giá các Option Values
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Không thể tạo biến thể vì sản phẩm chưa có thuộc tính hoặc giá trị thuộc tính.
+                            <br>
+                            <a asp-controller="ProductOptions" asp-action="Index" asp-route-productId="@productId" class="alert-link">
+                                Vui lòng thêm thuộc tính sản phẩm trước
+                            </a>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.Any())
+                {
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <strong>Lưu ý:</strong> Giá biến thể = tổng giá của các Option Values được chọn.
+                                    Để thay đổi giá, hãy cập nhật giá trong Option Values.
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <div id="processingIndicator" class="d-none">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Đang xử lý...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let selectedCount = 0;
+
+            // ✅ Load option prices info
+            loadOptionPricesInfo();
+
+            // ✅ Calculate prices for all variants
+            calculateAllPrices();
+
+            function loadOptionPricesInfo() {
+                $.get('@Url.Action("DebugProductOptions", "Products")', { productId: @productId })
+                    .done(function(options) {
+                        let html = '';
+                        options.forEach(function(option) {
+                            html += `<strong>${option.name}:</strong> `;
+                            option.values.forEach(function(value, index) {
+                                if (index > 0) html += ', ';
+                                html += `${value.value} (${value.price ? value.price.toLocaleString() + '₫' : '0₫'})`;
+                            });
+                            html += '<br>';
+                        });
+                        $('#optionPricesInfo').html(html);
+                    })
+                    .fail(function() {
+                        $('#optionPricesInfo').html('<span class="text-danger">Không thể tải thông tin giá</span>');
+                    });
+            }
+
+            // ✅ Calculate price for all variants
+            function calculateAllPrices() {
+                $('.variant-row').each(function() {
+                    const index = $(this).data('variant-index');
+                    calculateVariantPrice(index);
+                });
+            }
+
+            // ✅ Calculate price for single variant
+            function calculateVariantPrice(index) {
+                const optionValueIds = [];
+                $(`.option-value-id[data-index="${index}"]`).each(function() {
+                    optionValueIds.push(parseInt($(this).val()));
+                });
+
+                $.post('@Url.Action("CheckVariantAvailability", "Variants")', {
+                    productId: @productId,
+                    optionValueIds: optionValueIds,
+                    basePrice: 0
+                })
+                .done(function(data) {
+                    $(`.price-input[data-index="${index}"]`).val(data.price);
+                })
+                .fail(function() {
+                    $(`.price-input[data-index="${index}"]`).val(0);
+                });
+            }
+
+            // ✅ Refresh prices button
+            $('#refreshPricesBtn').click(function() {
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang tính...');
+
+                setTimeout(function() {
+                    calculateAllPrices();
+                    $('#refreshPricesBtn').prop('disabled', false).html('<i class="fas fa-calculator"></i> Tính lại giá');
+                    toastr.success('Đã cập nhật giá cho tất cả biến thể');
+                }, 1000);
+            });
+
+            // Update selected count
+            function updateSelectedCount() {
+                selectedCount = $('.variant-checkbox:checked').length;
+                $('#selectedCount').text(selectedCount);
+                $('#createVariantsBtn').prop('disabled', selectedCount === 0);
+            }
+
+            // Master checkbox functionality
+            $('#masterCheckbox').change(function() {
+                const isChecked = $(this).prop('checked');
+                $('.variant-checkbox').prop('checked', isChecked);
+                updateSelectedCount();
+            });
+
+            // Individual checkbox change
+            $(document).on('change', '.variant-checkbox', function() {
+                updateSelectedCount();
+                const totalCheckboxes = $('.variant-checkbox').length;
+                const checkedCheckboxes = $('.variant-checkbox:checked').length;
+                $('#masterCheckbox').prop('indeterminate', checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes);
+                $('#masterCheckbox').prop('checked', checkedCheckboxes === totalCheckboxes);
+            });
+
+            // Select/Deselect all buttons
+            $('#selectAllBtn').click(function() {
+                $('.variant-checkbox').prop('checked', true);
+                $('#masterCheckbox').prop('checked', true);
+                updateSelectedCount();
+            });
+
+            $('#deselectAllBtn').click(function() {
+                $('.variant-checkbox').prop('checked', false);
+                $('#masterCheckbox').prop('checked', false);
+                updateSelectedCount();
+            });
+
+            // Form submission
+            $('#generateVariantsForm').submit(function(e) {
+                e.preventDefault();
+
+                if (selectedCount === 0) {
+                    toastr.warning('Vui lòng chọn ít nhất một biến thể để tạo');
+                    return;
+                }
+
+                // Build variants array
+                const variants = [];
+                $('.variant-checkbox:checked').each(function() {
+                    const index = $(this).data('index');
+
+                    const optionValueIds = [];
+                    $(`.option-value-id[data-index="${index}"]`).each(function() {
+                        optionValueIds.push(parseInt($(this).val()));
+                    });
+
+                    const variant = {
+                        IsSelected: true,
+                        Name: $(`.variant-name[data-index="${index}"]`).val(),
+                        Price: parseFloat($(`.price-input[data-index="${index}"]`).val()) || 0,
+                        Stock: parseInt($(`.stock-input[data-index="${index}"]`).val()) || 0,
+                        SKU: $(`.sku-input[data-index="${index}"]`).val(),
+                        Description: $(`.description-input[data-index="${index}"]`).val(),
+                        OptionValueIds: optionValueIds
+                    };
+
+                    variants.push(variant);
+                });
+
+                // Validation
+                let hasErrors = false;
+                variants.forEach(function(variant, index) {
+                    if (!variant.Name || variant.Name.trim() === '') {
+                        toastr.error(`Tên biến thể ${index + 1} không được để trống`);
+                        hasErrors = true;
+                    }
+                    if (variant.Stock < 0) {
+                        toastr.error(`Tồn kho biến thể "${variant.Name}" không được âm`);
+                        hasErrors = true;
+                    }
+                });
+
+                if (hasErrors) return;
+
+                // Show loading
+                $('#processingIndicator').removeClass('d-none');
+                $('#createVariantsBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang tạo...');
+
+                // Submit via AJAX
+                $.ajax({
+                    url: '@Url.Action("CreateVariants", "Variants")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        productId: @productId,
+                        variants: variants
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            setTimeout(function() {
+                                window.location.href = '@Url.Action("Index", "Variants", new { id = productId })';
+                            }, 2000);
+                        } else {
+                            toastr.error(response.message || 'Có lỗi xảy ra khi tạo biến thể');
+                            $('#processingIndicator').addClass('d-none');
+                            $('#createVariantsBtn').prop('disabled', false).html('<i class="fas fa-plus-circle"></i> Tạo biến thể đã chọn');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr.responseText);
+                        toastr.error('Có lỗi xảy ra: ' + error);
+                        $('#processingIndicator').addClass('d-none');
+                        $('#createVariantsBtn').prop('disabled', false).html('<i class="fas fa-plus-circle"></i> Tạo biến thể đã chọn');
+                    }
+                });
+            });
+
+            // Initialize
+            updateSelectedCount();
+        });
+    </script>
+
+    <style>
+        .variant-options .badge {
+            font-size: 0.75em;
+        }
+
+        .variant-row:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .form-control-sm {
+            font-size: 0.85em;
+        }
+
+        .input-group-text {
+            font-size: 0.85em;
+        }
+
+        #processingIndicator {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .price-input[readonly] {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+}

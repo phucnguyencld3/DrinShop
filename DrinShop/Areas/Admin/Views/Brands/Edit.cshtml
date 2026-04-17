@@ -1,0 +1,63 @@
+﻿@model DrinShop.Models.Brand
+
+@{
+    ViewData["Title"] = Model.BrandID == 0 ? "Thêm thương hiệu" : "Sửa thương hiệu";
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    @(Model.BrandID == 0 ? "Thêm thương hiệu mới" : "Sửa thương hiệu")
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Save" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="BrandID" />
+                    <input type="hidden" asp-for="CreatedBy" />
+                    <input type="hidden" asp-for="CreateDate" />
+
+                    <div class="form-group mb-3">
+                        <label asp-for="BrandName" class="form-label">Tên thương hiệu</label>
+                        <input asp-for="BrandName" class="form-control" placeholder="Nhập tên thương hiệu" />
+                        <span asp-validation-for="BrandName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="form-label">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả thương hiệu"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="Status" class="form-check-input" type="checkbox" />
+                        <label asp-for="Status" class="form-check-label">
+                            Kích hoạt thương hiệu
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            @(Model.BrandID == 0 ? "Thêm mới" : "Cập nhật")
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+

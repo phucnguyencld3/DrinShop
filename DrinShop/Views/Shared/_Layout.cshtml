@@ -1,0 +1,1189 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DrinShop</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" />
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        /* ======================================================= */
+        /* MÀU SẮC CHỦ ĐẠO (The Coffee Theme) */
+        /* ======================================================= */
+        :root {
+            --color-primary: #6C4E31; /* Nâu sữa - Màu chính (Dark) */
+            --color-light: #DCC5A1; /* Be kem - Màu nền/Hover (Light) */
+            --color-secondary: #A67C52; /* Nâu nhạt - Màu phụ trợ */
+            --color-background: #F5E9DA; /* Nền sáng */
+            --color-text-dark: #2A2A2A; /* Đen xám */
+            --color-accent: #8BC34A; /* Xanh Matcha (Màu nhấn) */
+        }
+
+        /* ======================================================= */
+        /* NAVBAR COLORS - Màu sắc navbar */
+        /* ======================================================= */
+
+        /* 1. Navbar background */
+        .navbar-custom {
+            background-color: var(--color-primary) !important; /* Nâu sữa */
+            border-bottom: 3px solid var(--color-secondary);
+            transition: all 0.3s ease-in-out;
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            width: 100%;
+        }
+
+            /* Navbar khi scroll */
+            .navbar-custom.navbar-scrolled {
+                background-color: rgba(108, 78, 49, 0.95) !important;
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                box-shadow: 0 2px 20px rgba(108, 78, 49, 0.3);
+                border-bottom: 2px solid var(--color-secondary);
+            }
+
+            /* 2. Navbar text colors */
+            .navbar-custom .navbar-brand,
+            .navbar-custom .nav-link,
+            .navbar-custom .dropdown-toggle {
+                color: var(--color-light) !important; /* Be kem */
+                transition: all 0.3s ease;
+            }
+
+                .navbar-custom .nav-link:hover,
+                .navbar-custom .navbar-brand:hover {
+                    color: white !important;
+                    transform: translateY(-1px);
+                }
+
+            /* Active nav item */
+            .navbar-custom .nav-item .nav-link.active {
+                color: white !important;
+                font-weight: 600;
+                position: relative;
+            }
+
+                .navbar-custom .nav-item .nav-link.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 30px;
+                    height: 2px;
+                    background-color: var(--color-light);
+                    border-radius: 1px;
+                }
+
+            /* 3. Search form colors */
+            .navbar-custom .form-control {
+                background-color: rgba(255, 255, 255, 0.9);
+                color: var(--color-text-dark);
+                border: 1px solid var(--color-secondary);
+                border-radius: 20px;
+                transition: all 0.3s ease;
+            }
+
+                .navbar-custom .form-control:focus {
+                    background-color: white;
+                    border-color: var(--color-light);
+                    box-shadow: 0 0 0 0.2rem rgba(220, 197, 161, 0.25);
+                }
+
+        .search-btn {
+            background-color: var(--color-secondary);
+            border: 1px solid var(--color-secondary);
+            color: white;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+            .search-btn:hover {
+                background-color: var(--color-light);
+                border-color: var(--color-light);
+                color: var(--color-text-dark);
+            }
+
+        /* 4. Dropdown menu colors */
+        .navbar-custom .dropdown-menu {
+            background-color: var(--color-background);
+            border: 1px solid var(--color-secondary);
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(108, 78, 49, 0.15);
+            margin-top: 8px;
+        }
+
+        .navbar-custom .dropdown-item,
+        .navbar-custom .dropdown-header {
+            color: var(--color-text-dark) !important;
+            transition: all 0.3s ease;
+        }
+
+            .navbar-custom .dropdown-item:hover {
+                background-color: var(--color-light) !important;
+                transform: translateX(5px);
+            }
+
+        /* 5. Cart badge */
+        .cart-badge {
+            animation: cartPulse 2s infinite;
+        }
+
+        @@keyframes cartPulse {
+            0%, 100%
+
+        {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+
+        }
+
+        .navbar-custom .nav-link .cart-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-custom .nav-link:hover .cart-icon {
+            transform: scale(1.1);
+        }
+
+        /* 6. Mobile navbar colors */
+        @@media (max-width: 991.98px) {
+            .navbar-custom .navbar-collapse
+
+        {
+            background-color: rgba(108, 78, 49, 0.98);
+            margin-top: 10px;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .navbar-custom .nav-link:hover {
+            background-color: rgba(220, 197, 161, 0.2);
+            transform: translateX(5px);
+        }
+
+        }
+
+        /* 7. Button colors */
+        .btn-primary {
+            --bs-btn-color: var(--color-text-dark);
+            --bs-btn-bg: var(--color-light);
+            --bs-btn-border-color: var(--color-light);
+            --bs-btn-hover-color: var(--color-text-dark);
+            --bs-btn-hover-bg: var(--color-secondary);
+            --bs-btn-hover-border-color: var(--color-secondary);
+            --bs-btn-active-bg: var(--color-secondary);
+            --bs-btn-active-border-color: var(--color-secondary);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* 8. Body padding for fixed navbar */
+        body {
+            padding-top: 80px;
+            transition: padding-top 0.3s ease;
+            background-color: var(--color-background);
+        }
+
+        /* 9. Other components colors */
+        .breadcrumb-custom-bar {
+            background-color: var(--color-background) !important;
+            border-bottom: 1px solid var(--color-secondary);
+        }
+
+            .breadcrumb-custom-bar .breadcrumb-item a {
+                color: var(--color-secondary);
+                transition: color 0.3s ease;
+            }
+
+                .breadcrumb-custom-bar .breadcrumb-item a:hover {
+                    color: var(--color-primary);
+                }
+
+            .breadcrumb-custom-bar .breadcrumb-item.active {
+                color: var(--color-text-dark);
+            }
+
+        .footer-custom {
+            background-color: var(--color-primary) !important;
+            border-top: 5px solid var(--color-secondary);
+            color: #FFFFFF;
+        }
+
+            .footer-custom h5, .footer-custom h6 {
+                color: var(--color-light) !important;
+            }
+
+            .footer-custom a {
+                color: var(--color-light);
+                text-decoration: none;
+                transition: all 0.3s ease;
+            }
+
+                .footer-custom a:hover {
+                    color: white;
+                    transform: translateX(3px);
+                }
+
+            .footer-custom .text-muted {
+                color: var(--color-light) !important;
+                opacity: 0.8;
+            }
+
+        .social-icon-box {
+            display: inline-flex;
+            width: 35px;
+            height: 35px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            background-color: var(--color-secondary);
+        }
+
+            .social-icon-box:hover {
+                transform: scale(1.1);
+                background-color: var(--color-light);
+            }
+
+            .social-icon-box i {
+                color: var(--color-primary);
+            }
+
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--color-primary);
+            color: var(--color-light);
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(108, 78, 49, 0.3);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1020;
+        }
+
+            .scroll-to-top.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .scroll-to-top:hover {
+                background-color: var(--color-secondary);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(108, 78, 49, 0.4);
+            }
+
+        /* Loading indicator */
+        .page-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-light), var(--color-primary));
+            background-size: 200% 100%;
+            animation: loadingBar 1.5s linear infinite;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+            .page-loading.show {
+                opacity: 1;
+            }
+
+        @@keyframes loadingBar {
+            0%
+
+        {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+
+        }
+
+        /* ======================================================= */
+        /* EXISTING RESPONSIVE STYLES - Giữ nguyên phần này */
+        /* ======================================================= */
+
+        /* 1. Container và navbar cơ bản */
+        .navbar-custom .container {
+            max-width: 100%;
+            padding: 0 15px;
+        }
+
+        .navbar-custom .navbar-collapse {
+            flex-wrap: nowrap;
+        }
+
+        /* 2. Navbar navigation - ngăn wrap */
+        .navbar-custom .navbar-nav {
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+        }
+
+        .navbar-custom .nav-item {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .navbar-custom .nav-link {
+            white-space: nowrap !important;
+            padding: 0.5rem 0.8rem !important;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-custom .navbar-brand {
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-right: 1.5rem !important;
+            font-size: 1.2rem !important;
+        }
+
+        .navbar-custom .d-flex.align-items-center {
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
+
+        .navbar-custom .form-control {
+            min-width: 120px;
+            width: 160px;
+            font-size: 0.85rem;
+        }
+
+        .navbar-custom .navbar-nav .nav-item.dropdown .nav-link {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .navbar-custom .d-flex.align-items-center .navbar-nav {
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+
+        .navbar-custom .d-flex.align-items-center .nav-item {
+            margin-left: 0.25rem;
+        }
+
+        /* Responsive breakpoints */
+        @@media (min-width: 1400px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 1.2rem !important;
+            font-size: 1rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 3rem !important;
+            font-size: 1.5rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 200px;
+            font-size: 0.9rem;
+        }
+
+        }
+
+        @@media (min-width: 1200px) and (max-width: 1399px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.95rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 2rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 180px;
+        }
+
+        }
+
+        @@media (min-width: 992px) and (max-width: 1199px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 0.7rem !important;
+            font-size: 0.85rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 1rem !important;
+            font-size: 1.1rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 140px;
+            font-size: 0.8rem;
+        }
+
+        .navbar-custom .nav-link i {
+            display: none;
+        }
+
+        }
+
+        @@media (min-width: 768px) and (max-width: 991px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 0.5rem !important;
+            font-size: 0.8rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 0.5rem !important;
+            font-size: 1rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 100px;
+            font-size: 0.75rem;
+        }
+
+        .navbar-custom .nav-link i,
+        .navbar-custom .navbar-brand i {
+            display: none;
+        }
+
+        }
+
+        @@media (min-width: 992px) and (max-width: 1300px) {
+            .navbar-custom .nav-link
+
+        {
+            font-size: 0.8rem !important;
+            padding: 0.5rem 0.6rem !important;
+        }
+
+        .navbar-custom .navbar-brand {
+            font-size: 1.1rem !important;
+        }
+
+        }
+
+        @@media (max-width: 767.98px) {
+            body
+
+        {
+            padding-top: 70px;
+        }
+
+        .navbar-custom .nav-item {
+            white-space: normal;
+        }
+
+        .navbar-custom .nav-link {
+            white-space: normal;
+            padding: 0.75rem 1rem !important;
+            font-size: 1rem;
+        }
+
+            .navbar-custom .nav-link i {
+                display: inline;
+            }
+
+        }
+
+
+        /* 1. Container và navbar cơ bản */
+        .navbar-custom .container {
+            max-width: 100%;
+            padding: 0 15px;
+        }
+
+        .navbar-custom .navbar-collapse {
+            flex-wrap: nowrap;
+        }
+
+        /* 2. Navbar navigation - ngăn wrap */
+        .navbar-custom .navbar-nav {
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+        }
+
+        .navbar-custom .nav-item {
+            flex-shrink: 0; /* Không cho phép thu nhỏ */
+            white-space: nowrap;
+        }
+
+        .navbar-custom .nav-link {
+            white-space: nowrap !important;
+            padding: 0.5rem 0.8rem !important;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 3. Brand name tối ưu */
+        .navbar-custom .navbar-brand {
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-right: 1.5rem !important;
+            font-size: 1.2rem !important;
+        }
+
+        /* 4. Search form tối ưu */
+        .navbar-custom .d-flex.align-items-center {
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
+
+        .navbar-custom .form-control {
+            min-width: 120px;
+            width: 160px;
+            font-size: 0.85rem;
+        }
+
+        .search-btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        /* 5. User menu tối ưu */
+        .navbar-custom .navbar-nav .nav-item.dropdown .nav-link {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 6. Right side navbar */
+        .navbar-custom .d-flex.align-items-center .navbar-nav {
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+
+        .navbar-custom .d-flex.align-items-center .nav-item {
+            margin-left: 0.25rem;
+        }
+
+        /* ======================================================= */
+        /* RESPONSIVE BREAKPOINTS - Điều chỉnh theo màn hình */
+        /* ======================================================= */
+
+        /* Large desktop (1400px+) */
+        @@media (min-width: 1400px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 1.2rem !important;
+            font-size: 1rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 3rem !important;
+            font-size: 1.5rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 200px;
+            font-size: 0.9rem;
+        }
+
+        }
+
+        /* Desktop (1200px - 1399px) */
+        @@media (min-width: 1200px) and (max-width: 1399px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.95rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 2rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 180px;
+        }
+
+        }
+
+        /* Medium desktop (992px - 1199px) */
+        @@media (min-width: 992px) and (max-width: 1199px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 0.7rem !important;
+            font-size: 0.85rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 1rem !important;
+            font-size: 1.1rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 140px;
+            font-size: 0.8rem;
+        }
+
+        /* Ẩn icon trong nav links để tiết kiệm chỗ */
+        .navbar-custom .nav-link i {
+            display: none;
+        }
+
+        }
+
+        /* Small desktop/tablet (768px - 991px) - Before collapse */
+        @@media (min-width: 768px) and (max-width: 991px) {
+            .navbar-custom .nav-link
+
+        {
+            padding: 0.5rem 0.5rem !important;
+            font-size: 0.8rem;
+        }
+
+        .navbar-custom .navbar-brand {
+            margin-right: 0.5rem !important;
+            font-size: 1rem !important;
+        }
+
+        .navbar-custom .form-control {
+            width: 100px;
+            font-size: 0.75rem;
+        }
+
+        /* Ẩn hết icon */
+        .navbar-custom .nav-link i,
+        .navbar-custom .navbar-brand i {
+            display: none;
+        }
+
+        }
+
+        /* ======================================================= */
+        /* GIẢI PHÁP DỰ PHÒNG - Nếu vẫn bị wrap */
+        /* ======================================================= */
+
+        /* Tùy chọn: Thu nhỏ text thêm nữa */
+        @@media (min-width: 992px) and (max-width: 1300px) {
+            .navbar-custom .nav-link
+
+        {
+            font-size: 0.8rem !important;
+            padding: 0.5rem 0.6rem !important;
+        }
+
+        .navbar-custom .navbar-brand {
+            font-size: 1.1rem !important;
+        }
+
+        /* Rút gọn text */
+        .navbar-custom .nav-link:nth-child(1) { /* Trang chủ */
+            /* Có thể ẩn text, chỉ giữ icon */
+        }
+
+        }
+
+        /* Mobile - Giữ nguyên collapse behavior */
+        @@media (max-width: 767.98px) {
+            .navbar-custom .nav-item
+
+        {
+            white-space: normal;
+        }
+
+        .navbar-custom .nav-link {
+            white-space: normal;
+            padding: 0.75rem 1rem !important;
+            font-size: 1rem;
+        }
+
+            .navbar-custom .nav-link i {
+                display: inline;
+            }
+
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Indicator -->
+    <div class="page-loading" id="pageLoading"></div>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-toggleable-sm navbar-dark navbar-custom" id="mainNavbar">
+            <div class="container">
+                <a class="navbar-brand me-5 fw-bold fs-4" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-coffee me-1"></i> DrinShop
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            @{
+                                var currentController = ViewContext?.RouteData?.Values["Controller"]?.ToString() ?? "";
+                                var currentAction = ViewContext?.RouteData?.Values["Action"]?.ToString() ?? "";
+                                var isHomeActive = currentController.Equals("Home", StringComparison.OrdinalIgnoreCase) &&
+                                currentAction.Equals("Index", StringComparison.OrdinalIgnoreCase);
+                            }
+                            <a class="nav-link @(isHomeActive ? "active" : "")" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home me-1"></i> Trang chủ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            @{
+                                var isProductActive = currentController.Equals("Products", StringComparison.OrdinalIgnoreCase);
+                            }
+                            <a class="nav-link @(isProductActive ? "active" : "")" asp-controller="Products" asp-action="Index">
+                                <i class="fas fa-coffee me-1"></i> Sản phẩm
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            @{
+                                var isBundleActive = currentController.Equals("Bundle", StringComparison.OrdinalIgnoreCase);
+                            }
+                            <a class="nav-link @(isBundleActive ? "active" : "")" asp-controller="Bundle" asp-action="Index">
+                                <i class="bi bi-box2-heart me-1"></i> Combo
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-list me-1"></i> Danh mục
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Categories" asp-action="Index">
+                                        <i class="fas fa-th-large me-2"></i> Tất cả danh mục
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                @{
+                                    var menuCategories = ViewBag.MenuCategories as IEnumerable<DrinShop.Models.Category>;
+                                }
+                                @if (menuCategories != null && menuCategories.Any())
+                                {
+                                    @foreach (var category in menuCategories)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-id="@category.CategoryID">
+                                                <i class="fas fa-tag me-2"></i> @(category.CategoryName ?? "Danh mục")
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                                else
+                                {
+                                    <li><span class="dropdown-item text-muted">Đang tải danh mục...</span></li>
+                                }
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            @{
+                                var isPrivacyActive = currentAction.Equals("Privacy", StringComparison.OrdinalIgnoreCase);
+                            }
+                            <a class="nav-link @(isPrivacyActive ? "active" : "")" asp-controller="Home" asp-action="Privacy">
+                                <i class="fas fa-info-circle me-1"></i> Giới thiệu
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center">
+                        <!-- Enhanced Search Form -->
+                        <form asp-controller="Products" asp-action="Search" method="get" class="d-flex me-3">
+                            <div class="input-group">
+                                <input class="form-control" type="search" name="term" placeholder="Tìm kiếm..."
+                                       value="@(ViewBag.SearchTerm ?? "")" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                <button class="btn search-btn" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        <ul class="navbar-nav">
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item me-3">
+                                    <a class="nav-link position-relative" asp-controller="Cart" asp-action="Index" title="Giỏ hàng">
+                                        <i class="fas fa-shopping-cart cart-icon"></i>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge" id="cart-count">
+                                            0
+                                        </span>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-user-circle me-1"></i> @(User.Identity.Name ?? "Người dùng")
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><h6 class="dropdown-header"><i class="fas fa-user-circle me-1"></i> Tài khoản</h6></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fas fa-user-edit me-2"></i> Hồ sơ cá nhân</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Invoice" asp-action="MyInvoices"><i class="fas fa-shopping-bag me-2"></i> Đơn hàng của tôi</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Account" asp-action="DeliveryAddress"><i class="fas fa-map-marker-alt me-2"></i> Địa chỉ giao hàng</a></li>
+
+                                        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                        {
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><h6 class="dropdown-header"><i class="fas fa-cogs me-1"></i> Quản trị</h6></li>
+                                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="fas fa-tachometer-alt me-2"></i> Bảng điều khiển</a></li>
+                                        }
+
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item me-3">
+                                    <a class="nav-link position-relative" href="#" onclick="showGuestCartNotice()" title="Giỏ hàng">
+                                        <i class="fas fa-shopping-cart cart-icon"></i>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="guest-cart-count">
+                                            0
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    @{
+                                        var isLoginActive = currentAction.Equals("Login", StringComparison.OrdinalIgnoreCase);
+                                    }
+                                    <a class="nav-link @(isLoginActive ? "active" : "")" asp-controller="Account" asp-action="Login">
+                                        <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                                    </a>
+                                </li>
+                                <li class="nav-item ms-2">
+                                    @{
+                                        var isRegisterActive = currentAction.Equals("Register", StringComparison.OrdinalIgnoreCase);
+                                    }
+                                    <a class="nav-link btn btn-primary px-3 py-1 @(isRegisterActive ? "active" : "")" asp-controller="Account" asp-action="Register">
+                                        <i class="fas fa-user-plus me-1"></i> Đăng ký
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    @if (ViewBag.ShowBreadcrumb == true)
+    {
+        <nav aria-label="breadcrumb" class="breadcrumb-custom-bar py-2">
+            <div class="container">
+                <ol class="breadcrumb mb-0">
+                    @await RenderSectionAsync("Breadcrumb", required: false)
+                </ol>
+            </div>
+        </nav>
+    }
+
+    <main role="main" class="pb-3">
+        <div class="container">
+            @if (TempData["Success"] != null)
+            {
+                <script>document.addEventListener('DOMContentLoaded', function() { toastr.success('@Html.Raw(TempData["Success"])'); });</script>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <script>document.addEventListener('DOMContentLoaded', function() { toastr.error('@Html.Raw(TempData["Error"])'); });</script>
+            }
+            @if (TempData["Info"] != null)
+            {
+                <script>document.addEventListener('DOMContentLoaded', function() { toastr.info('@Html.Raw(TempData["Info"])'); });</script>
+            }
+
+            @RenderBody()
+        </div>
+    </main>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTop" title="Lên đầu trang">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <footer class="footer border-top footer-custom mt-5">
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-coffee me-1"></i> DrinShop
+                    </h5>
+                    <p class="text-muted small">
+                        Chuỗi cửa hàng đồ uống hàng đầu. Cam kết chất lượng và dịch vụ tận tâm.
+                    </p>
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i> Hà Nội, Việt Nam
+                    </p>
+                    <p class="text-muted small">
+                        <i class="fas fa-envelope me-2"></i> info@drinshop.com
+                    </p>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="#" class="social-icon-box" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-icon-box" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon-box" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-4">
+                    <h6 class="mb-3 text-uppercase">Liên kết nhanh</h6>
+                    <ul class="list-unstyled">
+                        <li><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                        <li><a asp-controller="Products" asp-action="Index">Sản phẩm</a></li>
+                        <li><a asp-controller="Bundle" asp-action="Index">Combo</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Giới thiệu</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <h6 class="mb-3 text-uppercase">Hỗ trợ khách hàng</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Hướng dẫn đặt hàng</a></li>
+                        <li><a href="#">Chính sách giao hàng</a></li>
+                        <li><a href="#">Chính sách đổi trả</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <h6 class="mb-3 text-uppercase">Nhận ưu đãi mới</h6>
+                    <p class="text-muted small">Đăng ký email để nhận tin tức và ưu đãi độc quyền!</p>
+                    <form>
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="Email của bạn" aria-label="Email nhận tin">
+                            <button class="btn btn-primary" type="submit">Đăng ký</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <hr class="border-light opacity-25 mt-4 mb-3">
+
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="text-muted mb-0 small">
+                        &copy; 2024 - DrinShop. All Rights Reserved. Thiết kế bởi (Tên của bạn/team).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Khởi tạo toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "5000"
+        };
+
+        // Enhanced JavaScript for sticky navbar
+        $(document).ready(function() {
+            try {
+                // 1. Sticky Navbar Scroll Effect
+                let navbar = document.getElementById('mainNavbar');
+                let lastScrollTop = 0;
+
+                if (navbar) {
+                    window.addEventListener('scroll', function() {
+                        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                        // Add/remove scrolled class for styling changes
+                        if (scrollTop > 100) {
+                            navbar.classList.add('navbar-scrolled');
+                        } else {
+                            navbar.classList.remove('navbar-scrolled');
+                        }
+
+                        lastScrollTop = scrollTop;
+                    });
+                }
+
+                // 2. Scroll to Top Button
+                let scrollToTopBtn = document.getElementById('scrollToTop');
+
+                if (scrollToTopBtn) {
+                    window.addEventListener('scroll', function() {
+                        if (window.pageYOffset > 300) {
+                            scrollToTopBtn.classList.add('show');
+                        } else {
+                            scrollToTopBtn.classList.remove('show');
+                        }
+                    });
+
+                    scrollToTopBtn.addEventListener('click', function() {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    });
+                }
+
+                // 3. Page Loading Indicator
+                let pageLoading = document.getElementById('pageLoading');
+
+                // Show loading on link clicks
+                $('a[href^="/"], a[asp-controller], a[asp-action]').click(function(e) {
+                    // Don't show loading for dropdowns, anchors, or external links
+                    if (!$(this).attr('href') ||
+                        $(this).attr('href').startsWith('#') ||
+                        $(this).hasClass('dropdown-toggle') ||
+                        $(this).attr('href').startsWith('http')) {
+                        return;
+                    }
+
+                    if (pageLoading) {
+                        pageLoading.classList.add('show');
+
+                        // Hide loading after a timeout (fallback)
+                        setTimeout(function() {
+                            pageLoading.classList.remove('show');
+                        }, 3000);
+                    }
+                });
+
+                // Hide loading when page loads
+                window.addEventListener('load', function() {
+                    if (pageLoading) {
+                        pageLoading.classList.remove('show');
+                    }
+                });
+
+                // 4. Enhanced Search Form
+                $('.navbar-custom form[asp-action="Search"]').submit(function(e) {
+                    let searchTerm = $(this).find('input[name="term"]').val();
+                    if (searchTerm && searchTerm.trim() === '') {
+                        e.preventDefault();
+                        toastr.warning('Vui lòng nhập từ khóa tìm kiếm!', 'Thông báo');
+                    }
+                });
+
+                // 5. Cart Count Loading
+        @if (User?.Identity?.IsAuthenticated == true)
+        {
+            <text>
+                        loadCartCount();
+
+                        // Auto-refresh cart count every 30 seconds
+                        setInterval(function() {
+                            loadCartCount();
+                        }, 30000);
+            </text>
+        }
+
+                // 6. Mobile Menu Enhancements
+                $('.navbar-toggler').click(function() {
+                    setTimeout(function() {
+                        if ($('.navbar-collapse').hasClass('show')) {
+                            $('body').addClass('navbar-open');
+                        } else {
+                            $('body').removeClass('navbar-open');
+                        }
+                    }, 300);
+                });
+
+                // Close mobile menu when clicking outside
+                $(document).click(function(e) {
+                    if (!$(e.target).closest('.navbar').length) {
+                        $('.navbar-collapse').collapse('hide');
+                        $('body').removeClass('navbar-open');
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error initializing layout scripts:', error);
+            }
+        });
+
+        // Enhanced Guest Cart Notice
+        function showGuestCartNotice() {
+            toastr.info('Vui lòng <a href="/Account/Login" style="color: #fff; text-decoration: underline;">đăng nhập</a> để sử dụng giỏ hàng!', 'Thông báo', {
+                allowHtml: true,
+                timeOut: 7000
+            });
+        }
+
+        // Enhanced Cart Count Function
+        function loadCartCount() {
+            try {
+                $.get('/Cart/GetCartCount', function(data) {
+                    let count = data.count || 0;
+                    $('#cart-count').text(count);
+
+                    // Add animation if count changed
+                    if (count > 0) {
+                        $('#cart-count').parent().addClass('cart-badge');
+                    } else {
+                        $('#cart-count').parent().removeClass('cart-badge');
+                    }
+                }).fail(function() {
+                    console.warn('Could not load cart count');
+                });
+            } catch (error) {
+                console.error('Error loading cart count:', error);
+            }
+        }
+
+        // Window load event
+        window.addEventListener('load', function() {
+            // Add loaded class to body for any CSS animations
+            if (document.body) {
+                document.body.classList.add('page-loaded');
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

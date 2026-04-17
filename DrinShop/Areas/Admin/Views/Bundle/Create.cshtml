@@ -1,0 +1,669 @@
+﻿@model DrinShop.Models.Bundle
+
+@{
+    ViewData["Title"] = "Tạo combo mới";
+    var products = ViewBag.Products as List<DrinShop.Models.Product>;
+
+    // ✅ DEBUG: Kiểm tra sản phẩm
+    var productCount = products?.Count ?? 0;
+    var variantCount = products?.SelectMany(p => p.Variants ?? new List<DrinShop.Models.Variant>()).Count() ?? 0;
+
+
+	// Placeholder ảnh khi không có ảnh
+    var noImageSvg = "data:image/svg+xml,%3csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='60' height='60' fill='%23f8f9fa' stroke='%23dee2e6'/%3e%3ccircle cx='30' cy='22' r='6' fill='%23adb5bd'/%3e%3cpath d='M18 45 L22 40 L26 44 L34 36 L42 44 Z' fill='%23adb5bd'/%3e%3ctext x='30' y='55' font-size='7' fill='%236c757d' text-anchor='middle'%3eNo Image%3c/text%3e%3c/svg%3e";
+
+}
+
+<div class="alert alert-info">
+    <strong>Debug Info:</strong>
+    Có @productCount sản phẩm và @variantCount variants có sẵn.
+
+    @if (productCount == 0)
+    {
+        <br>
+
+        <strong class="text-danger">Lỗi: Không có sản phẩm nào! Vui lòng tạo sản phẩm trước.</strong>
+    }
+    else if (variantCount == 0)
+    {
+        <br>
+
+        <strong class="text-warning">Cảnh báo: Không có variant nào có sẵn!</strong>
+    }
+</div>
+
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-box2-heart"></i> Quản lý combo
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Tạo combo mới</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-primary fw-bold">
+            <i class="bi bi-plus-circle"></i> Tạo combo mới
+        </h1>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Cột trái: Form thông tin -->
+        <div class="col-lg-8">
+            <div class="card border-primary shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square"></i> Thông tin combo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data" id="createBundleForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- ✅ THÊM: Hidden fields để lưu thông tin bundle items -->
+                        <input type="hidden" id="bundleItemsData" name="BundleItemsData" value="" />
+
+                        <div class="row g-4">
+                            <!-- Cột trái -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Code" class="form-control" readonly />
+                                    <label asp-for="Code" class="text-primary fw-bold">
+                                        <i class="bi bi-hash"></i> Mã combo
+                                    </label>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle text-primary"></i> Mã tự động tạo, không thể thay đổi
+                                    </div>
+                                </div>
+
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Name" class="form-control" placeholder="Nhập tên combo" />
+                                    <label asp-for="Name" class="text-primary fw-bold">
+                                        <i class="bi bi-tag"></i> Tên combo *
+                                    </label>
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                </div>
+
+                                <!-- ✅ THÊM TRƯỜNG GIẢM GIÁ -->
+                                <div class="form-floating mb-3">
+                                    <input asp-for="DiscountAmount" class="form-control" type="number" min="0" step="1000" placeholder="0" />
+                                    <label asp-for="DiscountAmount" class="text-primary fw-bold">
+                                        <i class="bi bi-percent"></i> Số tiền giảm (₫)
+                                    </label>
+                                    <span asp-validation-for="DiscountAmount" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle text-primary"></i> Nhập số tiền giảm giá cho combo
+                                    </div>
+                                </div>
+
+                                <!-- ✅ HIỂN THỊ THÔNG TIN GIÁ -->
+                                <div class="card border-info mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary mb-2">
+                                            <i class="bi bi-calculator"></i> Thông tin giá
+                                        </h6>
+                                        <div class="row text-sm">
+                                            <div class="col-12 mb-1">
+                                                <span class="text-muted">Giá gốc:</span>
+                                                <span class="float-end fw-bold" id="originalPriceDisplay">0₫</span>
+                                            </div>
+                                            <div class="col-12 mb-1">
+                                                <span class="text-muted">Giảm giá:</span>
+                                                <span class="float-end text-danger" id="discountDisplay">0₫ (0%)</span>
+                                            </div>
+                                            <hr class="my-2">
+                                            <div class="col-12">
+                                                <span class="fw-bold text-primary">Giá bán:</span>
+                                                <span class="float-end fw-bold text-success fs-6" id="finalPriceDisplay">0₫</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cột phải -->
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input asp-for="Status" class="form-check-input" type="checkbox" style="transform: scale(1.5);" />
+                                            <label asp-for="Status" class="form-check-label text-primary fw-bold ms-2">
+                                                <i class="bi bi-power"></i> Kích hoạt combo
+                                            </label>
+                                        </div>
+                                        <div class="form-text mt-2">
+                                            Combo sẽ hiển thị trên website khi được kích hoạt
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mô tả -->
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    <textarea asp-for="Description" class="form-control" style="height: 120px;" placeholder="Mô tả combo..."></textarea>
+                                    <label asp-for="Description" class="text-primary fw-bold">
+                                        <i class="bi bi-journal-text"></i> Mô tả combo
+                                    </label>
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <!-- Upload ảnh -->
+                            <div class="col-12">
+                                <div class="card border-secondary">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0 text-primary">
+                                            <i class="bi bi-image"></i> Hình ảnh combo
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="file" name="bundleImage" id="bundleImage" class="form-control" accept="image/*" />
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle text-primary"></i> Chọn ảnh đại diện cho combo (khuyến nghị tỷ lệ vuông, dung lượng < 5MB)
+                                        </div>
+
+                                        <!-- Preview ảnh -->
+                                        <div id="imagePreview" class="mt-3 text-center" style="display: none;">
+                                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail border-primary" style="max-width: 200px; max-height: 200px;" />
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" id="removePreview">
+                                                    <i class="bi bi-x-circle"></i> Xóa ảnh
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit buttons -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Tạo combo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Quản lý sản phẩm -->
+        <div class="col-lg-4">
+            <!-- Sản phẩm đã chọn -->
+            <div class="card border-success mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-box-seam"></i> Sản phẩm đã chọn
+                        <span class="badge bg-light text-dark" id="selectedItemsCount">0</span>
+                    </h6>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        <i class="bi bi-plus-circle text-success"></i>
+                    </button>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <div id="selectedItems">
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2 mb-3">Chưa có sản phẩm</p>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin tính toán -->
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calculator"></i> Tính toán chi tiết
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-sm">
+                        <div class="col-12 mb-2">
+                            <span class="text-muted">Tổng sản phẩm:</span>
+                            <span class="float-end fw-bold" id="totalItemsDisplay">0</span>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <span class="text-muted">Giá gốc:</span>
+                            <span class="float-end fw-bold" id="totalOriginalPriceDisplay">0₫</span>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <span class="text-muted">Giảm giá:</span>
+                            <span class="float-end text-danger" id="totalDiscountDisplay">0₫ (0%)</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="col-12">
+                            <span class="fw-bold text-primary">Giá bán:</span>
+                            <span class="float-end fw-bold text-success fs-6" id="totalFinalPriceDisplay">0₫</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm sản phẩm -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Chọn sản phẩm cho combo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" id="searchProduct" class="form-control" placeholder="Tìm kiếm sản phẩm..." />
+                    </div>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto;">
+                    @if (products != null && products.Any())
+                    {
+						// Danh sách sản phẩm
+                        <div class="list-group">
+                            @foreach (var product in products)
+                            {
+                                var productImage = product.ProductImages?
+                                .OrderByDescending(x => x.IsDefault)
+                                .ThenBy(x => x.SortOrder)
+                                .FirstOrDefault()?.ImageUrl ?? noImageSvg; // ✅ Sử dụng SVG
+
+                                <div class="list-group-item product-item" data-product-name="@product.ProductName.ToLower()">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <img src="@productImage" alt="@product.ProductName"
+                                                 class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;"
+                                                 onerror="this.src='@noImageSvg'" /> ✅
+                                        </div>
+                                        <div class="col">
+                                            <h6 class="mb-1 text-primary">@product.ProductName</h6>
+                                            <small class="text-muted">
+                                                <i class="bi bi-tag"></i> @(product.Category?.CategoryName ?? "N/A")
+                                            </small>
+                                        </div>
+                                        <div class="col-auto">
+                                            @if (product.Variants != null && product.Variants.Any())
+                                            {
+                                                <select class="form-select form-select-sm variant-select mb-2" data-product-id="@product.ProductID">
+                                                    <option value="">-- Chọn biến thể --</option>
+                                                    @foreach (var variant in product.Variants.Where(v => v.Status && v.Stock > 0))
+                                                    {
+                                                        <option value="@variant.VariantID"
+                                                                data-name="@variant.VariantName"
+                                                                data-price="@variant.UnitPrice"
+                                                                data-stock="@variant.Stock"
+                                                                data-product-name="@product.ProductName"
+                                                                data-image="@productImage">
+                                                            @variant.VariantName - @variant.UnitPrice.ToString("N0")₫ (Còn: @variant.Stock)
+                                                        </option>
+                                                    }
+                                                </select>
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <span class="input-group-text">Số lượng:</span>
+                                                    <input type="number" class="form-control quantity-select" min="1" value="1" data-product-id="@product.ProductID" />
+                                                </div>
+                                                <button type="button" class="btn btn-success btn-sm btn-add-to-bundle"
+                                                        data-product-id="@product.ProductID" disabled>
+                                                    <i class="bi bi-plus"></i> Thêm vào combo
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning">Hết hàng</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Không có sản phẩm nào để thêm
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ CẬP NHẬT: Debug buttons -->
+<div class="card border-warning mt-4" id="debugPanel">
+    <div class="card-header bg-warning">
+        <h6 class="mb-0">🔧 Debug Panel (Chỉ để test)</h6>
+    </div>
+    <div class="card-body">
+        <div class="btn-group mb-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="debugForm()">
+                Debug Form
+            </button>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="testAddProduct()">
+                Test Add Product
+            </button>
+            <button type="button" class="btn btn-outline-info btn-sm" onclick="debugModal()">
+                Debug Modal
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="testFormValidation()">
+                Test Validation
+            </button>
+            <button type="button" class="btn btn-outline-warning btn-sm" onclick="testSubmit()">
+                Test Submit
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="testAjaxSubmit()">
+                Test AJAX Submit
+            </button>
+        </div>
+
+        <!-- ✅ THÊM: Row mới cho button debug -->
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-info btn-sm" onclick="debugButtons()">
+                Debug Button States
+            </button>
+            <button type="button" class="btn btn-outline-warning btn-sm" onclick="forceEnableButtons()">
+                Force Enable Buttons
+            </button>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="testSelectVariant()">
+                Test Select Variant
+            </button>
+        </div>
+
+        <div class="mt-2">
+            <small class="text-muted">Sử dụng F12 > Console để xem kết quả debug</small>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // ✅ Khai báo variables global
+        let selectedItems = [];
+
+        // ✅ Test functions
+        window.debugForm = function() {
+            console.log('=== DEBUG FORM STATUS ===');
+            console.log('Form HTML:', $('#createBundleForm')[0]);
+            console.log('Bundle Items Data:', $('#bundleItemsData').val());
+            console.log('Form Action:', $('#createBundleForm').attr('action'));
+            console.log('Form Method:', $('#createBundleForm').attr('method'));
+            console.log('Selected Items:', selectedItems);
+        };
+
+        window.debugButtons = function() {
+            console.log('=== DEBUG BUTTON STATES ===');
+            $('.variant-select').each(function(index) {
+                const productId = $(this).data('product-id');
+                const value = $(this).val();
+                const button = $(`.btn-add-to-bundle[data-product-id="${productId}"]`);
+                console.log(`Product ${productId}:`);
+                console.log(`  - Select value: "${value}"`);
+                console.log(`  - Button exists: ${button.length}`);
+                console.log(`  - Button disabled: ${button.prop('disabled')}`);
+            });
+        };
+
+        window.forceEnableButtons = function() {
+            $('.btn-add-to-bundle').prop('disabled', false);
+            console.log('✅ All buttons force enabled');
+        };
+
+        window.testSelectVariant = function() {
+            const modal = $('#addProductModal');
+            if (!modal.hasClass('show')) {
+                modal.modal('show');
+                setTimeout(() => testSelectVariant(), 500);
+                return;
+            }
+
+            const firstSelect = $('.variant-select').first();
+            const options = firstSelect.find('option');
+            if (options.length > 1) {
+                const testValue = options.eq(1).val();
+                firstSelect.val(testValue).trigger('change');
+            }
+        };
+
+        $(document).ready(function() {
+            // ✅ Function tính toán giá
+            function updatePriceCalculation() {
+                const originalPrice = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const discountAmount = parseFloat($('input[name="DiscountAmount"]').val()) || 0;
+                const finalPrice = Math.max(0, originalPrice - discountAmount);
+                const discountPercentage = originalPrice > 0 ? ((discountAmount / originalPrice) * 100).toFixed(1) : 0;
+                const totalItems = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+
+                $('#originalPriceDisplay').text(originalPrice.toLocaleString() + '₫');
+                $('#discountDisplay').text(discountAmount.toLocaleString() + '₫ (' + discountPercentage + '%)');
+                $('#finalPriceDisplay').text(finalPrice.toLocaleString() + '₫');
+                $('#totalItemsDisplay').text(totalItems);
+                $('#totalOriginalPriceDisplay').text(originalPrice.toLocaleString() + '₫');
+                $('#totalDiscountDisplay').text(discountAmount.toLocaleString() + '₫ (' + discountPercentage + '%)');
+                $('#totalFinalPriceDisplay').text(finalPrice.toLocaleString() + '₫');
+                $('#bundleItemsData').val(JSON.stringify(selectedItems));
+            }
+
+            // ✅ Function hiển thị danh sách sản phẩm
+            function updateSelectedItemsDisplay() {
+                const container = $('#selectedItems');
+                $('#selectedItemsCount').text(selectedItems.length);
+
+                if (selectedItems.length === 0) {
+                    container.html(`
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2 mb-3">Chưa có sản phẩm</p>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+                            </button>
+                        </div>
+                    `);
+                } else {
+                    let html = '';
+                    selectedItems.forEach((item, index) => {
+                        const subtotal = item.price * item.quantity;
+                        html += `
+                            <div class="border-bottom p-3" data-index="${index}">
+                                <div class="row align-items-center">
+                                    <div class="col-3">
+                                        <img src="${item.image || '/images/no-image.png'}" alt="${item.productName}"
+                                             class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;" />
+                                    </div>
+                                    <div class="col-6">
+                                        <strong class="d-block text-truncate">${item.productName}</strong>
+                                        <small class="text-muted">${item.variantName}</small>
+                                        <div class="mt-1">
+                                            <small class="text-success fw-bold">${subtotal.toLocaleString()}₫</small>
+                                        </div>
+                                        <small class="text-info">Còn: ${item.stock}</small>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="input-group input-group-sm">
+                                            <button type="button" class="btn btn-outline-secondary btn-decrease" data-index="${index}">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <input type="number" class="form-control text-center quantity-input"
+                                                   value="${item.quantity}" min="1" max="${item.stock}" data-index="${index}" />
+                                            <button type="button" class="btn btn-outline-secondary btn-increase" data-index="${index}">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1 btn-remove" data-index="${index}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    const totalPrice = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                    html += `
+                        <div class="p-3 bg-light">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-primary">Tổng cộng:</strong>
+                                <strong class="text-primary">${totalPrice.toLocaleString()}₫</strong>
+                            </div>
+                        </div>
+                    `;
+
+                    container.html(html);
+                }
+                updatePriceCalculation();
+            }
+
+            // ✅ Enable nút thêm khi chọn variant
+            $(document).on('change', '.variant-select', function() {
+                console.log('=== VARIANT SELECT CHANGED ===');
+
+                const productId = $(this).data('product-id');
+                const selectedValue = $(this).val();
+                const addButton = $(`.btn-add-to-bundle[data-product-id="${productId}"]`);
+
+                console.log('Product ID:', productId);
+                console.log('Selected Value:', selectedValue);
+                console.log('Add Button Found:', addButton.length);
+
+                if (selectedValue && selectedValue !== '') {
+                    addButton.prop('disabled', false);
+                    addButton.removeClass('disabled');
+                    console.log('✅ Button enabled');
+                } else {
+                    addButton.prop('disabled', true);
+                    addButton.addClass('disabled');
+                    console.log('❌ Button disabled');
+                }
+
+                console.log('Button disabled status:', addButton.prop('disabled'));
+            });
+
+            // Thêm sản phẩm vào combo
+            $(document).on('click', '.btn-add-to-bundle', function() {
+                console.log('=== ADD TO BUNDLE CLICKED ===');
+
+                const productId = $(this).data('product-id');
+                const variantSelect = $(`.variant-select[data-product-id="${productId}"]`);
+                const quantityInput = $(`.quantity-select[data-product-id="${productId}"]`);
+                const selectedOption = variantSelect.find('option:selected');
+
+                if (!selectedOption.val()) {
+                    Swal.fire('Lỗi!', 'Vui lòng chọn biến thể!', 'error');
+                    return;
+                }
+
+                const variantId = parseInt(selectedOption.val());
+                const quantity = parseInt(quantityInput.val()) || 1;
+                const stock = parseInt(selectedOption.data('stock'));
+
+                if (quantity > stock) {
+                    Swal.fire('Lỗi!', `Số lượng không thể vượt quá tồn kho (${stock})`, 'error');
+                    return;
+                }
+
+                // Kiểm tra duplicate
+                const existingIndex = selectedItems.findIndex(item => item.variantId === variantId);
+
+                if (existingIndex !== -1) {
+                    const newQuantity = selectedItems[existingIndex].quantity + quantity;
+                    if (newQuantity > stock) {
+                        Swal.fire('Lỗi!', `Tổng số lượng không thể vượt quá tồn kho (${stock})`, 'error');
+                        return;
+                    }
+                    selectedItems[existingIndex].quantity = newQuantity;
+                } else {
+                    const newItem = {
+                        variantId: variantId,
+                        productName: selectedOption.data('product-name'),
+                        variantName: selectedOption.data('name'),
+                        price: parseFloat(selectedOption.data('price')),
+                        quantity: quantity,
+                        stock: stock,
+                        image: selectedOption.data('image') || '/images/no-image.png'
+                    };
+                    selectedItems.push(newItem);
+                }
+
+                updateSelectedItemsDisplay();
+
+                // Reset form
+                variantSelect.val('');
+                quantityInput.val(1);
+                $(this).prop('disabled', true);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Đã thêm sản phẩm vào combo',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            });
+
+            // Form submission
+            $('#createBundleForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const name = $('input[name="Name"]').val().trim();
+                const discountAmount = parseFloat($('input[name="DiscountAmount"]').val()) || 0;
+
+                if (!name) {
+                    Swal.fire('Lỗi!', 'Vui lòng nhập tên combo', 'error');
+                    return;
+                }
+
+                if (selectedItems.length === 0) {
+                    Swal.fire('Lỗi!', 'Vui lòng thêm ít nhất 1 sản phẩm vào combo', 'error');
+                    return;
+                }
+
+                $('#bundleItemsData').val(JSON.stringify(selectedItems));
+
+                // Show loading và submit
+                Swal.fire({
+                    title: 'Đang tạo combo...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                // Submit form normally
+                this.submit();
+            });
+
+            // Khởi tạo
+            updateSelectedItemsDisplay();
+            console.log('=== INITIALIZATION COMPLETE ===');
+        });
+    </script>
+}
+
+

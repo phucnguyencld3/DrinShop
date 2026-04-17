@@ -1,0 +1,645 @@
+﻿@{
+    ViewData["Title"] = "Dashboard - Quản lý đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml"; 
+}
+
+<!-- Header -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-tachometer-alt text-primary me-2"></i>
+        Dashboard Quản lý
+    </h1>
+    <div>
+        <span class="text-muted small">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+    </div>
+</div>
+
+<!-- ===== HÀNG 1: THỐNG KÊ INVOICE CHÍNH ===== -->
+<div class="row mb-4">
+    <!-- Tổng đơn hàng -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Tổng đơn hàng
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.TotalInvoices ?? 0)</div>
+                        <div class="text-xs text-muted mt-1">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Hôm nay: @(ViewBag.Stats?.TodayInvoices ?? 0)
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-invoice fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chờ xử lý (Pending) -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Chờ xử lý
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.PendingInvoices ?? 0)</div>
+                        @if ((ViewBag.Stats?.CancelRequestedInvoices ?? 0) > 0)
+                        {
+                            <div class="text-xs text-danger mt-1">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                @(ViewBag.Stats?.CancelRequestedInvoices ?? 0) yêu cầu hủy
+                            </div>
+                        }
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-half fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đang xử lý (Confirmed + Shipped) -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Đang xử lý
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@((ViewBag.Stats?.ConfirmedInvoices ?? 0) + (ViewBag.Stats?.ShippedInvoices ?? 0))</div>
+                        <div class="text-xs text-info mt-1">
+                            <i class="fas fa-check me-1"></i>@(ViewBag.Stats?.ConfirmedInvoices ?? 0) xác nhận
+                            <i class="fas fa-truck ms-2 me-1"></i>@(ViewBag.Stats?.ShippedInvoices ?? 0) đang giao
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-cogs fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hoàn tất -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Hoàn tất
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.CompletedInvoices ?? 0)</div>
+                        @if ((ViewBag.Stats?.CancelledInvoices ?? 0) > 0)
+                        {
+                            <div class="text-xs text-danger mt-1">
+                                <i class="fas fa-ban me-1"></i>
+                                @(ViewBag.Stats?.CancelledInvoices ?? 0) đã hủy
+                            </div>
+                        }
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-double fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== HÀNG 2: THỐNG KÊ DOANH THU ===== -->
+<div class="row mb-4">
+    <!-- Doanh thu tổng -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Tổng doanh thu
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@((ViewBag.Stats?.TotalRevenue ?? 0).ToString("N0"))₫</div>
+                        <div class="text-xs text-muted mt-1">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Tháng này: @((ViewBag.Stats?.ThisMonthRevenue ?? 0).ToString("N0"))₫
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doanh thu hôm nay -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Doanh thu hôm nay
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@((ViewBag.Stats?.TodayRevenue ?? 0).ToString("N0"))₫</div>
+                        <div class="text-xs text-muted mt-1">
+                            <i class="fas fa-calendar-day me-1"></i>
+                            @(ViewBag.Stats?.TodayInvoices ?? 0) đơn hàng
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-check fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Giá trị đơn TB -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Giá trị TB/đơn
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(((decimal)(ViewBag.Stats?.AverageOrderValue ?? 0)).ToString("N0"))₫</div>
+                        <div class="text-xs text-muted mt-1">
+                            <i class="fas fa-calculator me-1"></i>
+                            COD: @(ViewBag.Stats?.CodInvoices ?? 0) đơn
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-bar fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tăng trưởng -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2 hover-shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Tăng trưởng tháng
+                        </div>
+                        @{
+                            var growth = ViewBag.Stats?.MonthlyGrowth ?? 0;
+                            string growthText = growth > 0 ? $"+{growth}" : $"{growth}";
+                            string growthClass = growth > 0 ? "text-success" : (growth < 0 ? "text-danger" : "text-muted");
+                        }
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@growthText</div>
+                        <div class="text-xs @growthClass mt-1">
+                            <i class="fas @(growth > 0 ? "fa-arrow-up" : (growth < 0 ? "fa-arrow-down" : "fa-minus")) me-1"></i>
+                            @(ViewBag.Stats?.ThisMonthInvoices ?? 0) đơn tháng này
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-trending-up fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== HÀNG 3: THỐNG KÊ SẢN PHẨM & KHO ===== -->
+<div class="row mb-4">
+    <!-- Tổng sản phẩm -->
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Sản phẩm</div>
+                <div class="h6 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.TotalProducts ?? 0)</div>
+                <small class="text-success">@(ViewBag.Stats?.ActiveProducts ?? 0) hoạt động</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biến thể -->
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Biến thể</div>
+                <div class="h6 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.TotalVariants ?? 0)</div>
+                <small class="text-success">@(ViewBag.Stats?.ActiveVariants ?? 0) hoạt động</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combo -->
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card border-left-purple shadow h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-purple text-uppercase mb-1">Combo</div>
+                <div class="h6 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.TotalBundles ?? 0)</div>
+                <small class="text-success">@(ViewBag.Stats?.ActiveBundles ?? 0) hoạt động</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sắp hết hàng -->
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Sắp hết</div>
+                <div class="h6 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.VariantsLowStock ?? 0)</div>
+                <small class="text-muted">≤ 5 sản phẩm</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hết hàng -->
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card border-left-dark shadow h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">Hết hàng</div>
+                <div class="h6 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.VariantsOutOfStock ?? 0)</div>
+                <small class="text-danger">Cần nhập kho</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Khách hàng -->
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Khách hàng</div>
+                <div class="h6 mb-0 font-weight-bold text-gray-800">@(ViewBag.Stats?.TotalCustomers ?? 0)</div>
+                <small class="text-success">@(ViewBag.Stats?.ActiveCustomers ?? 0) đã mua</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== PHẦN QUẢN LÝ NHANH ===== -->
+<div class="row">
+    <!-- Quản lý đơn hàng -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-warning text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-file-invoice me-2"></i>Quản lý đơn hàng
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a asp-area="Admin" asp-controller="Invoice" asp-action="Index"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-list text-primary me-2"></i>
+                            <strong>Tất cả đơn hàng</strong>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">@(ViewBag.Stats?.TotalInvoices ?? 0)</span>
+                    </a>
+
+                    @if ((ViewBag.Stats?.PendingInvoices ?? 0) > 0)
+                    {
+                        <a asp-area="Admin" asp-controller="Invoice" asp-action="Index" asp-route-status="Pending"
+                           class="list-group-item list-group-item-action list-group-item-warning d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-clock text-dark me-2"></i>
+                                <strong>Chờ xử lý</strong>
+                                <small class="text-muted d-block">Cần xác nhận ngay</small>
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill">@(ViewBag.Stats?.PendingInvoices ?? 0)</span>
+                        </a>
+                    }
+
+                    @if ((ViewBag.Stats?.CancelRequestedInvoices ?? 0) > 0)
+                    {
+                        <a asp-area="Admin" asp-controller="Invoice" asp-action="Index" asp-route-status="CancelRequested"
+                           class="list-group-item list-group-item-action list-group-item-danger d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-exclamation-triangle text-white me-2"></i>
+                                <strong class="text-white">Yêu cầu hủy</strong>
+                                <small class="text-white d-block opacity-75">Cần xử lý khẩn cấp</small>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill">@(ViewBag.Stats?.CancelRequestedInvoices ?? 0)</span>
+                        </a>
+                    }
+
+                    @if ((ViewBag.Stats?.ShippedInvoices ?? 0) > 0)
+                    {
+                        <a asp-area="Admin" asp-controller="Invoice" asp-action="Index" asp-route-status="Shipped"
+                           class="list-group-item list-group-item-action list-group-item-info d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-truck text-white me-2"></i>
+                                <strong class="text-white">Đang giao hàng</strong>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill">@(ViewBag.Stats?.ShippedInvoices ?? 0)</span>
+                        </a>
+                    }
+
+                    <div class="list-group-item bg-light">
+                        <small class="text-muted">
+                            <i class="fas fa-chart-pie text-secondary me-1"></i>
+                            Hôm nay: @(ViewBag.Stats?.TodayInvoices ?? 0) đơn - @((ViewBag.Stats?.TodayRevenue ?? 0).ToString("N0"))₫
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quản lý kho -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-warehouse me-2"></i>Quản lý kho
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a asp-area="Admin" asp-controller="Variants" asp-action="Overview"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-layer-group text-success me-2"></i>
+                            <strong>Tổng quan biến thể</strong>
+                        </div>
+                        <span class="badge bg-success rounded-pill">@(ViewBag.Stats?.TotalVariants ?? 0)</span>
+                    </a>
+
+                    @if ((ViewBag.Stats?.VariantsLowStock ?? 0) > 0)
+                    {
+                        <a asp-area="Admin" asp-controller="Variants" asp-action="Overview" asp-route-lowStock="true"
+                           class="list-group-item list-group-item-action list-group-item-warning d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-exclamation-triangle text-dark me-2"></i>
+                                <strong>Sắp hết hàng</strong>
+                                <small class="text-muted d-block">≤ 5 sản phẩm</small>
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill">@(ViewBag.Stats?.VariantsLowStock ?? 0)</span>
+                        </a>
+                    }
+
+                    @if ((ViewBag.Stats?.VariantsOutOfStock ?? 0) > 0)
+                    {
+                        <a asp-area="Admin" asp-controller="Variants" asp-action="Overview" asp-route-outOfStock="true"
+                           class="list-group-item list-group-item-action list-group-item-danger d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-ban text-white me-2"></i>
+                                <strong class="text-white">Hết hàng</strong>
+                                <small class="text-white d-block opacity-75">Cần nhập kho</small>
+                            </div>
+                            <span class="badge bg-light text-dark rounded-pill">@(ViewBag.Stats?.VariantsOutOfStock ?? 0)</span>
+                        </a>
+                    }
+
+                    <div class="list-group-item bg-light">
+                        <small class="text-muted">
+                            <i class="fas fa-boxes text-secondary me-1"></i>
+                            Tổng tồn kho: @((ViewBag.Stats?.TotalStock ?? 0).ToString("N0")) sản phẩm
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thao tác nhanh -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-bolt me-2"></i>Thao tác nhanh
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a asp-area="Admin" asp-controller="Products" asp-action="Create"
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle text-success me-2"></i>
+                        Thêm sản phẩm mới
+                    </a>
+                    <a asp-area="Admin" asp-controller="Bundle" asp-action="Create"
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle text-purple me-2"></i>
+                        Thêm combo mới
+                    </a>
+                    <a asp-area="Admin" asp-controller="Categories" asp-action="Create"
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle text-info me-2"></i>
+                        Thêm danh mục mới
+                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-area="Admin" asp-controller="Users" asp-action="Index"
+                           class="list-group-item list-group-item-action">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Quản lý người dùng
+                        </a>
+                    }
+                </div>
+
+                <hr>
+
+                <div class="row text-center small">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h6 mb-0 text-primary">@(ViewBag.Stats?.ActiveProducts ?? 0)</div>
+                            <small class="text-muted">SP hoạt động</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h6 mb-0 text-success">@(ViewBag.Stats?.ActiveBundles ?? 0)</div>
+                        <small class="text-muted">Combo hoạt động</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ĐƠN HÀNG GẦN ĐÂY ===== -->
+@if (ViewBag.RecentInvoices != null)
+{
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-history me-2"></i>Đơn hàng gần đây
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-borderless table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Trạng thái</th>
+                            <th>Tổng tiền</th>
+                            <th>Thời gian</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var invoice in ViewBag.RecentInvoices)
+                        {
+                            <tr>
+                                <td><strong>#@invoice.InvoiceID</strong></td>
+                                <td>@invoice.CustomerName</td>
+                                <td>
+                                    @switch (invoice.OrderStatus)
+                                    {
+                                        case OrderStatus.Pending:
+                                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                            break;
+                                        case OrderStatus.Confirmed:
+                                            <span class="badge bg-info">Đã xác nhận</span>
+                                            break;
+                                        case OrderStatus.Shipped:
+                                            <span class="badge bg-primary">Đang giao</span>
+                                            break;
+                                        case OrderStatus.Completed:
+                                            <span class="badge bg-success">Hoàn tất</span>
+                                            break;
+                                        case OrderStatus.CancelRequested:
+                                            <span class="badge bg-warning">Yêu cầu hủy</span>
+                                            break;
+                                        case OrderStatus.Cancelled:
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                            break;
+                                    }
+                                </td>
+                                <td><strong>@((invoice.TotalAmount + invoice.ShippingFee).ToString("N0"))₫</strong></td>
+                                <td>@invoice.CreatedAt?.ToString("dd/MM HH:mm")</td>
+                                <td>
+                                    <a asp-area="Admin" asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.InvoiceID"
+                                       class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center">
+                <a asp-area="Admin" asp-controller="Invoice" asp-action="Index" class="btn btn-primary">
+                    Xem tất cả đơn hàng
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        console.log('Invoice-focused Dashboard loaded');
+
+        // Hiệu ứng hover cho card
+        $('.hover-shadow').hover(
+            function() { $(this).addClass('shadow-lg'); },
+            function() { $(this).removeClass('shadow-lg'); }
+        );
+
+        // Cảnh báo đơn hàng cần xử lý
+        const pendingOrders = @(ViewBag.Stats?.PendingInvoices ?? 0);
+        const cancelRequested = @(ViewBag.Stats?.CancelRequestedInvoices ?? 0);
+
+        if (pendingOrders > 0 || cancelRequested > 0) {
+            setTimeout(() => {
+                let message = 'Có đơn hàng cần xử lý:\n';
+                if (pendingOrders > 0) {
+                    message += `• ${pendingOrders} đơn chờ xác nhận\n`;
+                }
+                if (cancelRequested > 0) {
+                    message += `• ${cancelRequested} yêu cầu hủy\n`;
+                }
+
+                if (confirm(message + '\nBạn có muốn xử lý ngay không?')) {
+                    window.location.href = '@Url.Action("Index", "Invoice", new { area = "Admin", status = "Pending" })';
+                }
+            }, 2000);
+        }
+
+        // Auto refresh stats every 60 seconds
+        setInterval(() => {
+            // Optional: Refresh page or specific stats
+            console.log('Stats auto-refresh check');
+        }, 60000);
+    </script>
+
+    <style>
+        .hover-shadow {
+            transition: box-shadow 0.2s ease-in-out;
+        }
+
+        /* Custom purple color */
+        .text-purple {
+            color: #6f42c1 !important;
+        }
+
+        .bg-purple {
+            background-color: #6f42c1 !important;
+        }
+
+        .border-left-purple {
+            border-left: 0.25rem solid #6f42c1 !important;
+        }
+
+        /* Card hover effects */
+        .card {
+            transition: transform 0.1s ease-in-out;
+        }
+
+            .card:hover {
+                transform: translateY(-1px);
+            }
+
+        /* Badge animations */
+        .badge {
+            transition: all 0.2s ease;
+            animation: fadeInBadge 0.5s ease-in-out;
+        }
+
+        @@keyframes fadeInBadge {
+            from
+
+        {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        }
+
+        /* Stats counter animation */
+        .h5, .h6 {
+            animation: countUp 0.8s ease-out;
+        }
+
+        @@keyframes countUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+    </style>
+}

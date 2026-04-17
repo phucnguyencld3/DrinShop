@@ -1,0 +1,315 @@
+﻿@model DrinShop.Models.Invoice
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    const string PrimaryColor = "#6C4E31";
+    const string SecondaryColor = "#A67C52";
+    const string AccentColor = "#8BC34A";
+    const string TextColor = "#2A2A2A";
+    const string LightBgColor = "#F5E9DA";
+    const string CreamBgColor = "#DCC5A1";
+}
+
+<style>
+    :root {
+        --primary-custom: @PrimaryColor;
+        --cream-bg-custom: @CreamBgColor;
+        --accent-custom: @AccentColor;
+        --secondary-custom: @SecondaryColor;
+        --text-custom: @TextColor;
+        --light-bg-custom: @LightBgColor;
+    }
+
+    .text-primary-custom {
+        color: var(--primary-custom) !important;
+    }
+
+    .bg-primary-custom {
+        background-color: var(--primary-custom) !important;
+    }
+
+    .bg-cream-custom {
+        background-color: var(--cream-bg-custom) !important;
+    }
+
+    .border-cream-custom {
+        border-color: var(--cream-bg-custom) !important;
+    }
+
+    .text-accent-custom {
+        color: var(--accent-custom) !important;
+    }
+
+    .bg-accent-custom {
+        background-color: var(--accent-custom) !important;
+    }
+
+    .text-secondary-custom {
+        color: var(--secondary-custom) !important;
+    }
+
+    .bg-light-custom {
+        background-color: var(--light-bg-custom) !important;
+    }
+
+    .text-body-custom {
+        color: var(--text-custom) !important;
+    }
+
+    .btn-primary-custom {
+        color: white;
+        background-color: var(--primary-custom);
+        border-color: var(--primary-custom);
+    }
+
+        .btn-primary-custom:hover {
+            background-color: var(--secondary-custom);
+            border-color: var(--secondary-custom);
+        }
+
+    .btn-outline-secondary-custom {
+        color: var(--primary-custom);
+        border-color: var(--cream-bg-custom);
+    }
+
+        .btn-outline-secondary-custom:hover {
+            background-color: var(--light-bg-custom);
+            color: var(--primary-custom);
+            border-color: var(--primary-custom);
+        }
+
+    .success-animation {
+        animation: successPulse 2s ease-in-out;
+    }
+
+    @@keyframes successPulse {
+        0% {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Message -->
+            <div class="card shadow-lg border-0 mb-4 success-animation">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-5x text-accent-custom"></i>
+                    </div>
+                    <h2 class="text-accent-custom mb-3">
+                        <i class="fas fa-party-horn me-2"></i> Đặt hàng thành công!
+                    </h2>
+                    <p class="lead text-body-custom mb-4">
+                        Cảm ơn bạn đã tin tưởng và mua sắm tại DrinShop!
+                        Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
+                    </p>
+
+                    <div class="bg-light-custom rounded p-3 mb-4">
+                        <h4 class="text-primary-custom mb-2">Mã hóa đơn: #@Model.InvoiceID</h4>
+                        <p class="text-secondary-custom mb-1">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Ngày đặt: @Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm")
+                        </p>
+                        <p class="text-secondary-custom mb-0">
+                            <i class="fas fa-dollar-sign me-2"></i>
+                            Tổng tiền: <strong class="text-danger">@((Model.TotalAmount + Model.ShippingFee).ToString("N0"))₫</strong>
+                        </p>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <a asp-controller="Products" asp-action="Index" class="btn btn-primary-custom btn-lg w-100">
+                                <i class="fas fa-shopping-bag me-2"></i> Tiếp tục mua sắm
+                            </a>
+                        </div>
+                        <div class="col-sm-6">
+                            <a asp-controller="Invoice" asp-action="MyInvoices" class="btn btn-outline-secondary-custom btn-lg w-100">
+                                <i class="fas fa-list-alt me-2"></i> Xem đơn hàng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Details -->
+            <div class="card shadow-sm border-cream-custom">
+                <div class="card-header bg-cream-custom">
+                    <h5 class="mb-0 text-primary-custom">
+                        <i class="fas fa-receipt me-2"></i> Chi tiết đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary-custom mb-2 border-bottom pb-2">Thông tin khách hàng</h6>
+                            <p class="mb-1"><strong>Họ tên:</strong> @Model.Customer.FullName</p>
+                            <p class="mb-1"><strong>Điện thoại:</strong> @Model.Customer.Phone</p>
+                            <p class="mb-0"><strong>Email:</strong> @Model.Customer.Email</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary-custom mb-2 border-bottom pb-2">Thông tin giao hàng</h6>
+                            <p class="mb-1"><strong>Địa chỉ:</strong> @Model.ShipAddress</p>
+                            <p class="mb-1">
+                                <strong>Trạng thái:</strong>
+                                @switch (Model.OrderStatus)
+                                {
+                                    case OrderStatus.Pending:
+                                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                        break;
+                                    case OrderStatus.Confirmed:
+                                        <span class="badge bg-info">Đã xác nhận</span>
+                                        break;
+                                    case OrderStatus.Shipped:
+                                        <span class="badge bg-primary">Đang giao hàng</span>
+                                        break;
+                                    case OrderStatus.Completed:
+                                        <span class="badge bg-success">Hoàn tất</span>
+                                        break;
+                                    case OrderStatus.CancelRequested:
+                                        <span class="badge bg-warning">Yêu cầu hủy</span>
+                                        break;
+                                    case OrderStatus.Cancelled:
+                                        <span class="badge bg-danger">Đã hủy</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@Model.OrderStatus</span>
+                                        break;
+                                }
+                            </p>
+                            <p class="mb-0">
+                                <strong>Thanh toán:</strong>
+                                @switch (Model.PayMethod)
+                                {
+                                    case PayMethod.Cash:
+                                        <span class="badge bg-info">Thanh toán khi nhận hàng</span>
+                                        break;
+                                    case PayMethod.CreditCard:
+                                        <span class="badge bg-primary">Thẻ tín dụng</span>
+                                        break;
+                                    case PayMethod.DebitCard:
+                                        <span class="badge bg-primary">Chuyển khoản ngân hàng</span>
+                                        break;
+                                    case PayMethod.MobilePayment:
+                                        <span class="badge bg-danger">Ví điện tử</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@Model.PayMethod</span>
+                                        break;
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Items -->
+                    <h6 class="text-primary-custom mb-3 border-bottom pb-2">Sản phẩm đã đặt</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-light-custom">
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.InvoiceDetails)
+                                {
+                                    var productName = item.Variant?.Product?.ProductName ?? item.Bundle?.Name ?? "Sản phẩm";
+                                    var variantName = item.Variant?.VariantName;
+
+                                    <tr>
+                                        <td>
+                                            <strong>@productName</strong>
+                                            @if (!string.IsNullOrEmpty(variantName))
+                                            {
+                                                <br>
+
+                                                <small class="text-muted">@variantName</small>
+                                            }
+                                            @if (item.Bundle != null)
+                                            {
+                                                <br>
+
+                                                <small class="text-success">
+                                                    <i class="fas fa-cubes me-1"></i>Combo - @(item.Bundle.BundleItems?.Count ?? 0) sản phẩm
+                                                </small>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary-custom">@item.Quantity</span>
+                                        </td>
+                                        <td class="text-end">@item.UnitPrice.ToString("N0")₫</td>
+                                        <td class="text-end"><strong>@item.TotalPrice.ToString("N0")₫</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="bg-light-custom">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Tạm tính:</strong></td>
+                                    <td class="text-end"><strong>@Model.TotalAmount.ToString("N0")₫</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Phí giao hàng:</strong></td>
+                                    <td class="text-end"><strong>@Model.ShippingFee.ToString("N0")₫</strong></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td colspan="3" class="text-end"><strong class="text-primary-custom">Tổng cộng:</strong></td>
+                                    <td class="text-end"><strong class="h5 text-danger">@((Model.TotalAmount + Model.ShippingFee).ToString("N0"))₫</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-primary-custom mb-2">Ghi chú:</h6>
+                            <p class="bg-light-custom p-3 rounded">@Model.Note</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="card shadow-sm border-cream-custom mt-4">
+                <div class="card-body text-center">
+                    <h6 class="text-primary-custom mb-3">
+                        <i class="fas fa-info-circle me-2"></i> Thông tin quan trọng
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <i class="fas fa-phone-alt fa-2x text-accent-custom mb-2"></i>
+                            <p class="small mb-0">Hotline hỗ trợ<br><strong>1900 1234</strong></p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-envelope fa-2x text-accent-custom mb-2"></i>
+                            <p class="small mb-0">Email hỗ trợ<br><strong>support@drinshop.com</strong></p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-clock fa-2x text-accent-custom mb-2"></i>
+                            <p class="small mb-0">Thời gian xử lý<br><strong>2-3 ngày làm việc</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,89 @@
+﻿@model DrinShop.Models.Product
+
+@{
+    ViewData["Title"] = "Thêm Sản Phẩm";
+
+    var categories = ViewData["Categories"] as List<DrinShop.Models.Category>;
+    var brands = ViewData["Brands"] as List<DrinShop.Models.Brand>;
+}
+
+<div class="container-fluid px-3 px-md-5">
+    <h1 class="mb-3">Thêm Sản Phẩm Mới</h1>
+    <h4 class="text-primary">Thông tin Sản Phẩm</h4>
+    <hr />
+
+    <div class="row">
+        <div class="col-lg-8 col-md-10">
+
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="mt-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Code" class="form-label fw-bold"></label>
+                            <input asp-for="Code" class="form-control" readonly />
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-2">
+                            <label asp-for="ProductName" class="form-label fw-bold"></label>
+                            <input asp-for="ProductName" class="form-control" />
+                            <span asp-validation-for="ProductName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="CategoryID" class="form-label fw-bold"></label>
+                            <select asp-for="CategoryID" class="form-select"
+                                    asp-items="@(new SelectList(categories, "CategoryID", "CategoryName"))">
+                                <option value="">-- Chọn Danh Mục --</option>
+                            </select>
+                            <span asp-validation-for="CategoryID" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-2">
+                            <label asp-for="BrandID" class="form-label fw-bold"></label>
+                            <select asp-for="BrandID" class="form-select"
+                                    asp-items="@(new SelectList(brands, "BrandID", "BrandName"))">
+                                <option value="">-- Chọn Thương Hiệu --</option>
+                            </select>
+                            <span asp-validation-for="BrandID" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Description" class="form-label fw-bold"></label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label class="form-label fw-bold">Hình Ảnh (Tối đa 5 ảnh)</label>
+                    <input type="file" name="images" class="form-control" multiple accept="image/*" />
+                </div>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input" asp-for="Status" />
+                    <label class="form-check-label fw-bold">
+                        @Html.DisplayNameFor(model => model.Status)
+                        <small class="text-muted">(Kích hoạt / Không kích hoạt)</small>
+                    </label>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4">Thêm Sản Phẩm</button>
+                    <a asp-action="Index" class="btn btn-secondary ms-2 px-4">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

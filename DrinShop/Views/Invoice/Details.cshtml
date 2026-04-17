@@ -1,0 +1,414 @@
+﻿@model DrinShop.Models.Invoice
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.InvoiceID}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+@{
+    // Sử dụng CSS giống OrderSuccess.cshtml
+    const string PrimaryColor = "#6C4E31";
+    const string SecondaryColor = "#A67C52";
+    const string AccentColor = "#8BC34A";
+    const string TextColor = "#2A2A2A";
+    const string LightBgColor = "#F5E9DA";
+    const string CreamBgColor = "#DCC5A1";
+}
+
+<style>
+    /* Sử dụng CSS từ OrderSuccess.cshtml */
+    :root {
+        --primary-custom: @PrimaryColor;
+        --cream-bg-custom: @CreamBgColor;
+        --accent-custom: @AccentColor;
+        --secondary-custom: @SecondaryColor;
+        --text-custom: @TextColor;
+        --light-bg-custom: @LightBgColor;
+    }
+
+    .text-primary-custom {
+        color: var(--primary-custom) !important;
+    }
+
+    .bg-primary-custom {
+        background-color: var(--primary-custom) !important;
+    }
+
+    .bg-cream-custom {
+        background-color: var(--cream-bg-custom) !important;
+    }
+
+    .border-cream-custom {
+        border-color: var(--cream-bg-custom) !important;
+    }
+
+    .text-accent-custom {
+        color: var(--accent-custom) !important;
+    }
+
+    .bg-accent-custom {
+        background-color: var(--accent-custom) !important;
+    }
+
+    .text-secondary-custom {
+        color: var(--secondary-custom) !important;
+    }
+
+    .bg-light-custom {
+        background-color: var(--light-bg-custom) !important;
+    }
+
+    .text-body-custom {
+        color: var(--text-custom) !important;
+    }
+
+    .btn-primary-custom {
+        color: white;
+        background-color: var(--primary-custom);
+        border-color: var(--primary-custom);
+    }
+
+        .btn-primary-custom:hover {
+            background-color: var(--secondary-custom);
+            border-color: var(--secondary-custom);
+        }
+
+    .btn-outline-secondary-custom {
+        color: var(--primary-custom);
+        border-color: var(--cream-bg-custom);
+    }
+
+        .btn-outline-secondary-custom:hover {
+            background-color: var(--light-bg-custom);
+            color: var(--primary-custom);
+            border-color: var(--primary-custom);
+        }
+</style>
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light-custom p-2 rounded">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-secondary-custom">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-action="MyInvoices" class="text-secondary-custom">Đơn hàng của tôi</a></li>
+            <li class="breadcrumb-item active text-primary-custom" aria-current="page">Chi tiết đơn hàng</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Order Header -->
+            <div class="card shadow-sm border-cream-custom mb-4">
+                <div class="card-header bg-cream-custom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="text-primary-custom mb-1">Đơn hàng #@Model.InvoiceID</h4>
+                            <p class="text-secondary-custom mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Ngày đặt: @Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            @switch (Model.OrderStatus)
+                            {
+                                case OrderStatus.Pending:
+                                    <span class="badge bg-warning text-dark fs-6">Chờ xác nhận</span>
+                                    break;
+                                case OrderStatus.Confirmed:
+                                    <span class="badge bg-info text-white fs-6">Đã xác nhận</span>
+                                    break;
+                                case OrderStatus.Shipped:
+                                    <span class="badge bg-primary fs-6">Đang giao hàng</span>
+                                    break;
+                                case OrderStatus.Completed:
+                                    <span class="badge bg-success fs-6">Hoàn tất</span>
+                                    break;
+                                case OrderStatus.CancelRequested:
+                                    <span class="badge bg-warning fs-6">Yêu cầu hủy</span>
+                                    break;
+                                case OrderStatus.Cancelled:
+                                    <span class="badge bg-danger fs-6">Đã hủy</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary fs-6">@Model.OrderStatus</span>
+                                    break;
+                            }
+                            <p class="text-danger fw-bold mb-0 mt-2">
+                                @((Model.TotalAmount + Model.ShippingFee).ToString("N0"))₫
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content từ OrderSuccess.cshtml -->
+            <!-- Customer Info và Order Details sử dụng lại code từ OrderSuccess.cshtml -->
+            <div class="card shadow-sm border-cream-custom">
+                <div class="card-header bg-cream-custom">
+                    <h5 class="mb-0 text-primary-custom">
+                        <i class="fas fa-receipt me-2"></i> Chi tiết đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary-custom mb-2 border-bottom pb-2">Thông tin khách hàng</h6>
+                            <p class="mb-1"><strong>Họ tên:</strong> @Model.Customer.FullName</p>
+                            <p class="mb-1"><strong>Điện thoại:</strong> @Model.Customer.Phone</p>
+                            <p class="mb-0"><strong>Email:</strong> @Model.Customer.Email</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary-custom mb-2 border-bottom pb-2">Thông tin giao hàng</h6>
+                            <p class="mb-1"><strong>Địa chỉ:</strong> @Model.ShipAddress</p>
+                            <p class="mb-0">
+                                <strong>Thanh toán:</strong>
+                                @switch (Model.PayMethod)
+                                {
+                                    case PayMethod.Cash:
+                                        <span class="badge bg-info">Thanh toán khi nhận hàng</span>
+                                        break;
+                                    case PayMethod.CreditCard:
+                                        <span class="badge bg-primary">Thẻ tín dụng</span>
+                                        break;
+                                    case PayMethod.DebitCard:
+                                        <span class="badge bg-primary">Chuyển khoản ngân hàng</span>
+                                        break;
+                                    case PayMethod.MobilePayment:
+                                        <span class="badge bg-danger">Ví điện tử</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@Model.PayMethod</span>
+                                        break;
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Items -->
+                    <h6 class="text-primary-custom mb-3 border-bottom pb-2">Sản phẩm đã đặt</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-light-custom">
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.InvoiceDetails)
+                                {
+                                    // ✅ SỬA: Khai báo biến an toàn
+                                    string productName = "Sản phẩm";
+                                    string variantName = "";
+
+                                    if (item.Variant?.Product != null)
+                                    {
+                                        productName = item.Variant.Product.ProductName ?? "Sản phẩm";
+                                        variantName = item.Variant.VariantName ?? "";
+                                    }
+                                    else if (item.Bundle != null)
+                                    {
+                                        productName = item.Bundle.Name ?? "Combo";
+                                    }
+
+                                    <tr>
+                                        <td>
+                                            <strong>@productName</strong>
+                                            @if (!string.IsNullOrEmpty(variantName))
+                                            {
+                                                <br>
+
+                                                <small class="text-muted">@variantName</small>
+                                            }
+                                            @if (item.Bundle != null)
+                                            {
+                                                <br>
+
+                                                <small class="text-success">
+                                                    <i class="fas fa-cubes me-1"></i>Combo - @(item.Bundle.BundleItems?.Count ?? 0) sản phẩm
+                                                </small>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary-custom">@item.Quantity</span>
+                                        </td>
+                                        <td class="text-end">@item.UnitPrice.ToString("N0")₫</td>
+                                        <td class="text-end"><strong>@item.TotalPrice.ToString("N0")₫</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="bg-light-custom">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Tạm tính:</strong></td>
+                                    <td class="text-end"><strong>@Model.TotalAmount.ToString("N0")₫</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Phí giao hàng:</strong></td>
+                                    <td class="text-end"><strong>@Model.ShippingFee.ToString("N0")₫</strong></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td colspan="3" class="text-end"><strong class="text-primary-custom">Tổng cộng:</strong></td>
+                                    <td class="text-end"><strong class="h5 text-danger">@((Model.TotalAmount + Model.ShippingFee).ToString("N0"))₫</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-primary-custom mb-2">Ghi chú:</h6>
+                            <p class="bg-light-custom p-3 rounded">@Model.Note</p>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.CancelReason))
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-danger mb-2">Lý do hủy:</h6>
+                            <p class="bg-danger p-3 rounded text-white">@Model.CancelReason</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <a asp-action="MyInvoices" class="btn btn-outline-secondary-custom me-3">
+                    <i class="fas fa-arrow-left me-2"></i> Quay lại danh sách
+                </a>
+                @if (Model.OrderStatus == OrderStatus.Pending)
+                {
+                    <button class="btn btn-outline-danger" onclick="requestCancel(@Model.InvoiceID)">
+                        <i class="fas fa-times me-2"></i> Hủy đơn hàng
+                    </button>
+                }
+                @if (Model.OrderStatus == OrderStatus.Completed)
+                {
+                    <a asp-controller="Products" asp-action="Index" class="btn btn-primary-custom">
+                        <i class="fas fa-redo me-2"></i> Mua lại
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Debug: Hiển thị thông tin của đơn hàng hiện tại
+        console.log('Current Invoice ID:', @Model.InvoiceID);
+        console.log('Current Customer ID from Model:', @Model.Customer.UserId);
+        console.log('Order Status:', '@Model.OrderStatus');
+
+        function requestCancel(invoiceId) {
+            console.log('=== CANCEL REQUEST DEBUG ===');
+            console.log('Requested Invoice ID:', invoiceId);
+            console.log('Model Invoice ID:', @Model.InvoiceID);
+
+            // Kiểm tra xem invoiceId có đúng không
+            if (invoiceId !== @Model.InvoiceID) {
+                console.error('Invoice ID mismatch!');
+                toastr.error('Lỗi: ID đơn hàng không khớp!');
+                return;
+            }
+
+            const reason = prompt("Vui lòng nhập lý do hủy đơn hàng:");
+            if (reason && reason.trim()) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+
+                console.log('Token found:', !!token);
+                console.log('Token value:', token);
+                console.log('Reason:', reason.trim());
+
+                // Tạo data object chi tiết
+                const requestData = {
+                    id: invoiceId,
+                    reason: reason.trim(),
+                    __RequestVerificationToken: token
+                };
+
+                console.log('Request data:', requestData);
+
+                $.ajax({
+                    url: '@Url.Action("CancelRequest", "Invoice")',
+                    type: 'POST',
+                    data: requestData,
+                    beforeSend: function() {
+                        console.log('Sending request...');
+                    },
+                    success: function(data) {
+                        console.log('=== RESPONSE RECEIVED ===');
+                        console.log('Full response:', data);
+
+                        if (data.success) {
+                            console.log('Success!');
+                            toastr.success(data.message);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            console.log('Failed!');
+                            console.log('Error message:', data.message);
+
+                            // Hiển thị thông tin debug chi tiết
+                            if (data.debug) {
+                                console.log('=== DEBUG INFO ===');
+                                console.log('Customer ID:', data.debug.customerId);
+                                console.log('Invoice ID:', data.debug.invoiceId);
+                                console.log('Invoice exists:', data.debug.invoiceExists);
+                                console.log('Customer invoices:', data.debug.allCustomerInvoices);
+                                console.log('Invoice owner info:', data.debug.invoiceOwner);
+
+                                // Hiển thị debug info trong alert để dễ xem
+                                let debugText = `Debug Info:\n`;
+                                debugText += `Customer ID: ${data.debug.customerId}\n`;
+                                debugText += `Invoice ID: ${data.debug.invoiceId}\n`;
+                                debugText += `Invoice exists: ${data.debug.invoiceExists}\n`;
+                                debugText += `Number of customer invoices: ${data.debug.allCustomerInvoices?.length || 0}\n`;
+                                if (data.debug.invoiceOwner) {
+                                    debugText += `Invoice owner ID: ${data.debug.invoiceOwner.CustomerId}\n`;
+                                    debugText += `Invoice status: ${data.debug.invoiceOwner.OrderStatus}\n`;
+                                }
+
+                                alert(debugText);
+                            }
+
+                            toastr.error(data.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('=== AJAX ERROR ===');
+                        console.error('Status:', status);
+                        console.error('Error:', error);
+                        console.error('Response Text:', xhr.responseText);
+                        console.error('Status Code:', xhr.status);
+
+                        toastr.error('Có lỗi xảy ra! Vui lòng thử lại.');
+
+                        // Hiển thị chi tiết lỗi
+                        alert(`Ajax Error:\nStatus: ${status}\nError: ${error}\nStatus Code: ${xhr.status}`);
+                    }
+                });
+            }
+        }
+
+        // Debug: Kiểm tra token khi page load
+        $(document).ready(function() {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            console.log('Page loaded - Token available:', !!token);
+            if (!token) {
+                console.error('WARNING: Anti-forgery token not found!');
+            }
+        });
+    </script>
+}
+
+<div id="token">
+    @Html.AntiForgeryToken()
+</div>
+
+
+
+

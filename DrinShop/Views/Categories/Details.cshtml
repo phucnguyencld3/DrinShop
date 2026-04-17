@@ -1,0 +1,161 @@
+﻿@model IEnumerable<DrinShop.Models.Product>
+@{
+    ViewData["Title"] = $"{ViewBag.Category?.CategoryName} - Danh mục";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var category = ViewBag.Category as DrinShop.Models.Category;
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var totalProducts = ViewBag.TotalProducts ?? 0;
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Categories" asp-action="Index">Danh mục</a></li>
+            <li class="breadcrumb-item active">@category?.CategoryName</li>
+        </ol>
+    </nav>
+
+    <!-- Category Header -->
+    <div class="text-center mb-4">
+        <h2 class="display-6 fw-bold text-primary">@category?.CategoryName</h2>
+        @if (!string.IsNullOrEmpty(category?.Description))
+        {
+            <p class="lead text-muted">@category.Description</p>
+        }
+        <div class="text-muted">
+            <i class="fas fa-box"></i> @totalProducts sản phẩm
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <!-- Products Grid -->
+        <div class="row">
+            @foreach (var product in Model)
+            {
+                var defaultImage = product.ProductImages?.FirstOrDefault(pi => pi.IsDefault)?.ImageUrl
+                ?? product.ProductImages?.FirstOrDefault()?.ImageUrl
+                ?? "/images/no-image.png";
+
+                var minPrice = product.Variants?.Any() == true ? product.Variants.Min(v => v.UnitPrice) : 0;
+                var maxPrice = product.Variants?.Any() == true ? product.Variants.Max(v => v.UnitPrice) : 0;
+                var totalStock = product.Variants?.Sum(v => v.Stock) ?? 0;
+
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 product-card shadow-sm">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductID" class="text-decoration-none">
+                            <img src="@defaultImage" class="card-img-top" alt="@product.ProductName" style="height: 200px; object-fit: cover;">
+                        </a>
+
+                        @if (totalStock == 0)
+                        {
+                            <span class="badge bg-danger position-absolute m-2">Hết hàng</span>
+                        }
+                        else if (totalStock < 10)
+                        {
+                            <span class="badge bg-warning position-absolute m-2">Sắp hết</span>
+                        }
+
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductID" class="text-dark text-decoration-none">
+                                    @product.ProductName
+                                </a>
+                            </h6>
+
+                            @if (product.Brand != null)
+                            {
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-tag"></i> @product.Brand.BrandName
+                                </p>
+                            }
+
+                            @if (minPrice > 0)
+                            {
+                                <div class="mb-2">
+                                    @if (minPrice == maxPrice)
+                                    {
+                                        <span class="h6 text-primary mb-0">@minPrice.ToString("N0") VNĐ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="h6 text-primary mb-0">@minPrice.ToString("N0") - @maxPrice.ToString("N0") VNĐ</span>
+                                    }
+                                </div>
+                            }
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-box"></i> Còn: @totalStock
+                                </small>
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductID" class="btn btn-sm btn-primary">
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous -->
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Details" asp-route-id="@category.CategoryID" asp-route-page="@(currentPage - 1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    <!-- Page Numbers -->
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Details" asp-route-id="@category.CategoryID" asp-route-page="@i">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <!-- Next -->
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Details" asp-route-id="@category.CategoryID" asp-route-page="@(currentPage + 1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h5>Chưa có sản phẩm nào trong danh mục này</h5>
+            <p>Vui lòng quay lại sau hoặc xem các danh mục khác.</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a asp-controller="Categories" asp-action="Index" class="btn btn-outline-primary">Xem danh mục khác</a>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Xem tất cả sản phẩm</a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            }
+    </style>
+}

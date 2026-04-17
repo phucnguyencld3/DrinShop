@@ -1,0 +1,87 @@
+﻿@model DrinShop.Models.Brand
+
+@{
+    ViewData["Title"] = "Chi tiết thương hiệu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">
+        <i class="bi bi-tag-fill"></i> Chi tiết thương hiệu: @Model.BrandName
+    </h3>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left-circle-fill"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Thông tin chi tiết</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.BrandName)
+            </dt>
+            <dd class="col-sm-9">
+                <strong>@Html.DisplayFor(model => model.BrandName)</strong>
+            </dd>
+
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.Status)
+            </dt>
+            <dd class="col-sm-9">
+                @if (Model.Status)
+                {
+                    <span class="badge bg-success">Kích hoạt</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Vô hiệu</span>
+                }
+            </dd>
+
+            <hr class="my-2" />
+
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.Description)
+            </dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-break">@Html.DisplayFor(model => model.Description)</p>
+                }
+                else
+                {
+                    <small class="text-muted">Không có mô tả</small>
+                }
+            </dd>
+
+            <hr class="my-2" />
+
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.CreateDate)
+            </dt>
+            <dd class="col-sm-9">
+                @(Model.CreateDate?.ToString("dd/MM/yyyy HH:mm:ss") ?? "N/A")
+            </dd>
+
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.CreatedBy)
+            </dt>
+            <dd class="col-sm-9">
+                @(Model.CreatedBy ?? "N/A")
+            </dd>
+
+        </dl>
+    </div>
+
+    <div class="card-footer text-end">
+        <a asp-action="Edit" asp-route-id="@Model.BrandID" class="btn btn-warning me-2">
+            <i class="bi bi-pencil-square"></i> Sửa
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle-fill"></i> Quay lại
+        </a>
+    </div>
+</div>

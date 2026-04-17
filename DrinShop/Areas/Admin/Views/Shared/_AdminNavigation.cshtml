@@ -1,0 +1,84 @@
+﻿<div class="nav flex-column nav-pills p-2">
+
+    <!-- Dashboard -->
+    <a class="nav-link d-flex align-items-center
+        @(ViewContext.RouteData.Values["controller"].ToString() == "Dashboard"
+        ? "active bg-dark text-white fw-bold" : "text-dark")"
+       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+        <i class="fas fa-tachometer-alt me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Dashboard" ? "text-white" : "text-primary")"></i>
+        Dashboard
+    </a>
+
+    <hr class="my-2">
+
+    <!-- QUẢN LÝ SẢN PHẨM -->
+    <h6 class="sidebar-heading text-dark fw-bold px-3">Quản lý sản phẩm</h6>
+
+    <a class="nav-link d-flex align-items-center
+        @(ViewContext.RouteData.Values["controller"].ToString() == "Products"
+        ? "active bg-dark text-white fw-bold" : "text-dark")"
+       asp-area="Admin" asp-controller="Products" asp-action="Index">
+        <i class="fas fa-box me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Products" ? "text-white" : "text-info")"></i>
+        Sản phẩm
+    </a>
+
+    <a class="nav-link d-flex align-items-center
+        @(ViewContext.RouteData.Values["controller"].ToString() == "Variants"
+        ? "active bg-dark text-white fw-bold" : "text-dark")"
+       asp-area="Admin" asp-controller="Variants" asp-action="Overview">
+        <i class="fas fa-layer-group me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Variants" ? "text-white" : "text-success")"></i>
+        Biến thể
+    </a>
+
+    <a class="nav-link d-flex align-items-center
+        @(ViewContext.RouteData.Values["controller"].ToString() == "Bundle"
+        ? "active bg-dark text-white fw-bold" : "text-dark")"
+       asp-area="Admin" asp-controller="Bundle" asp-action="Index">
+        <i class="fas fa-box-open me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Bundle" ? "text-white" : "text-purple")"></i>
+        Combo
+    </a>
+
+    <a class="nav-link d-flex align-items-center
+        @(ViewContext.RouteData.Values["controller"].ToString() == "Categories"
+        ? "active bg-dark text-white fw-bold" : "text-dark")"
+       asp-area="Admin" asp-controller="Categories" asp-action="Index">
+        <i class="fas fa-tags me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Categories" ? "text-white" : "text-warning")"></i>
+        Danh mục
+    </a>
+
+    <hr class="my-2">
+
+    <!-- QUẢN LÝ BÁN HÀNG -->
+    <h6 class="sidebar-heading text-dark fw-bold px-3">Quản lý bán hàng</h6>
+
+    <a class="nav-link d-flex align-items-center
+        @(ViewContext.RouteData.Values["controller"].ToString() == "Orders"
+        ? "active bg-dark text-white fw-bold" : "text-dark")"
+       asp-area="Admin" asp-controller="Orders" asp-action="Index">
+        <i class="fas fa-shopping-cart me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Orders" ? "text-white" : "text-danger")"></i>
+        Đơn hàng
+    </a>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <hr class="my-2">
+
+        <h6 class="sidebar-heading text-dark fw-bold px-3">Hệ thống</h6>
+
+        <a class="nav-link d-flex align-items-center
+            @(ViewContext.RouteData.Values["controller"].ToString() == "Users"
+            ? "active bg-dark text-white fw-bold" : "text-dark")"
+           asp-area="Admin" asp-controller="Users" asp-action="Index">
+            <i class="fas fa-users me-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Users" ? "text-white" : "text-secondary")"></i>
+            Người dùng
+        </a>
+    }
+</div>
+
+<style>
+    .text-purple {
+        color: #6f42c1 !important;
+    }
+</style>
+
+

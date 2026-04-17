@@ -1,0 +1,334 @@
+﻿@model DrinShop.Models.Bundle
+
+@{
+    ViewData["Title"] = "Xóa Combo";
+    var totalOriginalPrice = Model.BundleItems?.Sum(bi => bi.Variant.UnitPrice * bi.Quantity) ?? 0;
+    var bundlePrice = Model.FinalPrice;
+    var discount = totalOriginalPrice > 0 && bundlePrice > 0 ? ((totalOriginalPrice - bundlePrice) / totalOriginalPrice * 100) : 0;
+}
+
+<div class="container-fluid px-3 px-md-5">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+
+            <!-- Alert Warning -->
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h4 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Cảnh báo!
+                </h4>
+                <p class="mb-0">Bạn có chắc chắn muốn xóa combo này? Hành động này không thể hoàn tác!</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Card thông tin combo -->
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-trash"></i> Xóa Combo
+                    </h4>
+                </div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <!-- Cột trái: Ảnh -->
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <img src="@Model.ImageUrl" alt="@Model.Name"
+                                     class="img-fluid rounded border"
+                                     style="max-height: 250px; object-fit: contain;" />
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                     style="height: 250px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Cột phải: Thông tin -->
+                        <div class="col-md-8">
+                            <h3 class="text-danger mb-3">@Model.Name</h3>
+
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Mã combo:</dt>
+                                <dd class="col-sm-8">
+                                    <code>@Model.Code</code>
+                                </dd>
+
+                                <dt class="col-sm-4">Giá bán:</dt>
+                                <dd class="col-sm-8">
+                                    <strong class="text-success fs-5">@bundlePrice.ToString("N0")₫</strong>
+                                    @if (discount > 0)
+                                    {
+                                        <span class="badge bg-danger ms-2">-@discount.ToString("0.0")%</span>
+                                    }
+                                </dd>
+
+                                @if (totalOriginalPrice > 0)
+                                {
+                                    <dt class="col-sm-4">Giá gốc:</dt>
+                                    <dd class="col-sm-8">
+                                        <del class="text-muted">@totalOriginalPrice.ToString("N0")₫</del>
+                                    </dd>
+                                }
+
+                                <dt class="col-sm-4">Số sản phẩm:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.BundleItems != null && Model.BundleItems.Any())
+                                    {
+                                        <span class="badge bg-primary">@Model.BundleItems.Count sản phẩm</span>
+                                        <small class="text-muted d-block">
+                                            Tổng: @Model.BundleItems.Sum(bi => bi.Quantity) items
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">0 sản phẩm</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Trạng thái:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Status)
+                                    {
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Ngừng hoạt động</span>
+                                    }
+                                </dd>
+
+                                @if (!string.IsNullOrEmpty(Model.Description))
+                                {
+                                    <dt class="col-sm-4">Mô tả:</dt>
+                                    <dd class="col-sm-8">
+                                        <p class="mb-0 text-muted">@Model.Description</p>
+                                    </dd>
+                                }
+
+                                <dt class="col-sm-4">Người tạo:</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.CreatedBy))
+                                    {
+                                        <span class="badge bg-info">@Model.CreatedBy</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Ngày tạo:</dt>
+                                <dd class="col-sm-8">
+                                    <small class="text-muted">
+                                        @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                                    </small>
+                                </dd>
+
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách sản phẩm trong combo -->
+                    @if (Model.BundleItems != null && Model.BundleItems.Any())
+                    {
+                        <hr class="my-4" />
+                        <h5 class="mb-3">
+                            <i class="bi bi-box-seam"></i> Sản phẩm trong combo sẽ bị xóa:
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 60px;">Ảnh</th>
+                                        <th>Sản phẩm</th>
+                                        <th>Biến thể</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.BundleItems)
+                                    {
+                                        var productImage = item.Variant?.Product?.ProductImages?
+                                        .OrderByDescending(x => x.IsDefault)
+                                        .ThenBy(x => x.SortOrder)
+                                        .FirstOrDefault()?.ImageUrl ?? "/images/placeholder.png";
+                                        var subtotal = item.Variant.UnitPrice * item.Quantity;
+
+                                        <tr>
+                                            <td class="text-center">
+                                                <img src="@productImage" alt="@item.Variant.Product.ProductName"
+                                                     class="img-thumbnail"
+                                                     style="width: 45px; height: 45px; object-fit: cover;" />
+                                            </td>
+                                            <td>@item.Variant.Product.ProductName</td>
+                                            <td>
+                                                <small class="text-muted">@item.Variant.VariantName</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">×@item.Quantity</span>
+                                            </td>
+                                            <td class="text-end">
+                                                @item.Variant.UnitPrice.ToString("N0")₫
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>@subtotal.ToString("N0")₫</strong>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="5" class="text-end fw-bold">Tổng cộng:</td>
+                                        <td class="text-end">
+                                            <strong class="text-primary">@totalOriginalPrice.ToString("N0")₫</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+
+                    <!-- Cảnh báo ràng buộc -->
+                    <div class="alert alert-warning mt-4">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle-fill"></i> Lưu ý quan trọng:
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Không thể xóa combo đã có trong <strong>đơn hàng</strong></li>
+                            <li>Không thể xóa combo đang có trong <strong>giỏ hàng</strong> của khách</li>
+                            <li>Ảnh combo sẽ bị xóa vĩnh viễn khỏi Cloudinary</li>
+                            <li>Tất cả sản phẩm trong combo sẽ bị xóa</li>
+                            <li>Hành động này <strong class="text-danger">KHÔNG THỂ HOÀN TÁC</strong></li>
+                        </ul>
+                    </div>
+
+                    <!-- Form xóa -->
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input type="hidden" asp-for="BundleId" />
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+
+                            <button type="submit" class="btn btn-danger btn-lg" id="btnDelete">
+                                <i class="bi bi-trash"></i> Xác nhận xóa combo
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Confirm trước khi submit form
+            $('#btnDelete').on('click', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Xác nhận xóa?',
+                    html: `
+                        <div class="text-start">
+                            <p class="mb-2">Bạn đang chuẩn bị xóa combo:</p>
+                            <p class="mb-2"><strong>@Model.Name</strong></p>
+                            <p class="mb-2"><code>@Model.Code</code></p>
+                            <hr>
+                            <p class="text-danger mb-0">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Hành động này không thể hoàn tác!
+                            </p>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash"></i> Đồng ý, xóa ngay',
+                    cancelButtonText: '<i class="bi bi-x-circle"></i> Hủy bỏ',
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-danger px-4',
+                        cancelButton: 'btn btn-secondary px-4'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Submit form
+                        $(this).closest('form').submit();
+                    }
+                });
+            });
+
+            // Auto dismiss alert
+            setTimeout(function() {
+                $('.alert-dismissible').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+
+    <style>
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        .card-header {
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+        }
+
+        dl dt {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        dl dd {
+            color: #6c757d;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .img-thumbnail {
+            border-radius: 0.375rem;
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+        }
+
+        .badge {
+            font-size: 0.85em;
+        }
+
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #d63384;
+            font-size: 0.9em;
+        }
+
+        .btn-lg {
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+        }
+    </style>
+}
+
+

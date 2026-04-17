@@ -1,0 +1,505 @@
+﻿@model DrinShop.Models.Product
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Chi tiết sản phẩm</h1>
+    <div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.ProductID" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Sửa
+            </a>
+            <div class="btn-group ms-2" role="group">
+                <a asp-controller="Variants" asp-action="Index" asp-route-id="@Model.ProductID" class="btn btn-info">
+                    <i class="bi bi-layers"></i> Quản lý Biến thể
+                </a>
+                <a asp-controller="ProductOptions" asp-action="Index" asp-route-productId="@Model.ProductID" class="btn btn-success">
+                    <i class="bi bi-gear-fill"></i> Quản lý Thuộc tính
+                </a>
+                @if (Model.ProductOptions != null && Model.ProductOptions.Any())
+                {
+                    <a asp-controller="Variants" asp-action="GenerateVariants" asp-route-id="@Model.ProductID" class="btn btn-primary">
+                        <i class="bi bi-magic"></i> Tạo biến thể tự động
+                    </a>
+                }
+            </div>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                @if (Model.ProductImages != null && Model.ProductImages.Any())
+                {
+                    var defaultImage = Model.ProductImages.FirstOrDefault(img => img.IsDefault)
+                    ?? Model.ProductImages.First();
+
+                    <div class="text-center mb-3">
+                        <img id="mainImage" src="@defaultImage.ImageUrl" alt="@Model.ProductName"
+                             class="img-fluid rounded border" style="max-height: 400px; object-fit: contain; width: 100%;" />
+                    </div>
+
+                    @if (Model.ProductImages.Count > 1)
+                    {
+                        <div class="row g-2">
+                            @foreach (var img in Model.ProductImages.OrderBy(i => i.SortOrder))
+                            {
+                                <div class="col-3">
+                                    <img src="@img.ImageUrl" alt="@Model.ProductName"
+                                         class="img-thumbnail thumbnail-image @(img.ImageUrl == defaultImage.ImageUrl ? "border-primary" : "")"
+                                         style="cursor: pointer; height: 80px; width: 100%; object-fit: cover;"
+                                         onclick="changeMainImage('@img.ImageUrl', this)" />
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-images"></i> @Model.ProductImages.Count hình ảnh
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                             style="height: 300px;">
+                            <div class="text-muted">
+                                <i class="bi bi-image" style="font-size: 5rem;"></i>
+                                <p class="mt-3">Chưa có hình ảnh</p>
+                                <a asp-action="Edit" asp-route-id="@Model.ProductID" class="btn btn-sm btn-primary">
+                                    Thêm hình ảnh
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Thông tin sản phẩm</h5>
+            </div>
+            <div class="card-body">
+                <h3 class="mb-3">@Model.ProductName</h3>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Mã sản phẩm</dt>
+                    <dd class="col-sm-8">
+                        <code>@Model.Code</code>
+                    </dd>
+
+                    <dt class="col-sm-4">Danh mục</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Category != null)
+                        {
+                            <span class="badge bg-info">@Model.Category.CategoryName</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Thương hiệu</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Brand != null)
+                        {
+                            <span class="badge bg-primary">@Model.Brand.BrandName</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Tồn kho</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.TotalStock > 0)
+                        {
+                            <span class="badge bg-success fs-6">@Model.TotalStock sản phẩm</span>
+                            @if (Model.Variants != null && Model.Variants.Any())
+                            {
+                                <br />
+                                <small class="text-muted">
+                                    Từ @Model.Variants.Count biến thể
+                                </small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger fs-6">Hết hàng</span>
+                        }
+                    </dd>
+
+                    <!-- ✅ UPDATED: Hiển thị giá với thông tin về logic tính giá -->
+                    <dt class="col-sm-4">Khoảng giá</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.MinPrice > 0 && Model.MaxPrice > 0)
+                        {
+                            @if (Model.MinPrice == Model.MaxPrice)
+                            {
+                                <strong class="text-danger fs-4">@Model.MinPrice.ToString("N0") đ</strong>
+                            }
+                            else
+                            {
+                                <strong class="text-danger fs-4">@Model.MinPrice.ToString("N0") - @Model.MaxPrice.ToString("N0") đ</strong>
+                            }
+                            <br />
+                            <small class="text-info">
+                                <i class="bi bi-info-circle"></i>
+                                Giá được tính từ tổng giá Option Values
+                            </small>
+                        }
+                        else if (Model.ProductOptions != null && Model.ProductOptions.Any())
+                        {
+                            <span class="text-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Chưa có biến thể nào được tạo
+                            </span>
+                            <br />
+                            <small class="text-muted">
+                                Giá sẽ được tính từ Option Values khi tạo biến thể
+                            </small>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">Liên hệ</span>
+                            <br />
+                            <small class="text-muted">Chưa có thuộc tính sản phẩm</small>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Trạng thái</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Status)
+                        {
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle"></i> Hoạt động
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary fs-6">
+                                <i class="bi bi-x-circle"></i> Ngừng hoạt động
+                            </span>
+                        }
+                    </dd>
+
+                    <hr class="my-3" />
+                </dl>
+
+                <!-- ✅ NEW: Option Values với giá -->
+                @if (Model.ProductOptions != null && Model.ProductOptions.Any())
+                {
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="bi bi-gear"></i> Thuộc tính sản phẩm
+                        </h6>
+
+                        @foreach (var option in Model.ProductOptions)
+                        {
+                            <div class="card mb-3 border-left-primary">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong class="text-primary">@option.Name</strong>
+                                        <small class="text-muted">@option.Values.Count giá trị</small>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var value in option.Values)
+                                        {
+                                            <span class="badge bg-light text-dark border">
+                                                @value.Value
+                                                @if (value.Price > 0)
+                                                {
+                                                    <span class="text-success fw-bold"> +@value.Price.ToString("N0")₫</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted"> miễn phí</span>
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- ✅ Quick Actions -->
+                        <div class="d-flex gap-2 mt-3">
+                            <a asp-controller="ProductOptions" asp-action="Index" asp-route-productId="@Model.ProductID" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-gear"></i> Chỉnh sửa thuộc tính
+                            </a>
+                            <a asp-controller="Variants" asp-action="GenerateVariants" asp-route-id="@Model.ProductID" class="btn btn-sm btn-primary">
+                                <i class="bi bi-magic"></i> Tạo biến thể từ thuộc tính
+                            </a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- ✅ No Options State -->
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <div>
+                                <strong>Chưa có thuộc tính sản phẩm</strong>
+                                <br />
+                                <small>Thêm thuộc tính để có thể tạo biến thể với giá tự động</small>
+                            </div>
+                        </div>
+                        <hr />
+                        <a asp-controller="ProductOptions" asp-action="Edit" asp-route-productId="@Model.ProductID" class="btn btn-sm btn-warning">
+                            <i class="bi bi-plus-circle"></i> Thêm thuộc tính đầu tiên
+                        </a>
+                    </div>
+                }
+
+                <!-- ✅ UPDATED: Variants Section -->
+                @if (Model.Variants != null && Model.Variants.Any())
+                {
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-layers"></i> Biến thể sản phẩm
+                                <span class="badge bg-primary">@Model.Variants.Count</span>
+                            </h6>
+                            <a asp-controller="Variants" asp-action="Index" asp-route-id="@Model.ProductID" class="btn btn-sm btn-info">
+                                Quản lý tất cả
+                            </a>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th>Thuộc tính</th>
+                                        <th>Giá</th>
+                                        <th>Tồn kho</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var variant in Model.Variants.Take(5))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@variant.VariantName</strong>
+                                                <br />
+                                                <small class="text-muted">@variant.SKU</small>
+                                            </td>
+                                            <td>
+                                                @foreach (var optionValue in variant.VariantOptionValues)
+                                                {
+                                                    <span class="badge bg-secondary me-1">
+                                                        @optionValue.ProductOptionValue.ProductOption.Name: @optionValue.ProductOptionValue.Value
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong class="text-success">@variant.UnitPrice.ToString("N0") đ</strong>
+                                                <br />
+                                                <small class="text-muted">Tự động tính</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(variant.Stock > 0 ? "bg-success" : "bg-danger")">
+                                                    @variant.Stock
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(variant.Status ? "bg-success" : "bg-secondary")">
+                                                    @(variant.Status ? "Hoạt động" : "Tạm dừng")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (Model.Variants.Count > 5)
+                        {
+                            <small class="text-muted">
+                                Hiển thị 5/@Model.Variants.Count biến thể.
+                                <a asp-controller="Variants" asp-action="Index" asp-route-id="@Model.ProductID">
+                                    Xem tất cả
+                                </a>
+                            </small>
+                        }
+                    </div>
+                }
+                else if (Model.ProductOptions != null && Model.ProductOptions.Any())
+                {
+                    <!-- ✅ Has Options but No Variants -->
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>Sẵn sàng tạo biến thể</strong>
+                                <br />
+                                <small>Đã có thuộc tính, có thể tạo biến thể tự động</small>
+                            </div>
+                        </div>
+                        <hr />
+                        <a asp-controller="Variants" asp-action="GenerateVariants" asp-route-id="@Model.ProductID" class="btn btn-primary">
+                            <i class="bi bi-magic"></i> Tạo biến thể tự động
+                        </a>
+                    </div>
+                }
+
+                <!-- Product Description -->
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <hr class="my-3" />
+                    <h6><strong>Mô tả sản phẩm:</strong></h6>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <p class="mb-0">@Html.Raw(Model.Description.Replace(Environment.NewLine, "<br/>"))</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- ✅ Quick Actions Panel -->
+                <hr class="my-3" />
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-gear-fill text-success mb-2" style="font-size: 1.5rem;"></i>
+                                <h6 class="card-title">Quản lý thuộc tính</h6>
+                                <small class="text-muted">Thêm/sửa giá Option Values</small>
+                                <br />
+                                <a asp-controller="ProductOptions" asp-action="Index" asp-route-productId="@Model.ProductID" class="btn btn-success btn-sm mt-2">
+                                    Quản lý
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-info">
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-layers text-info mb-2" style="font-size: 1.5rem;"></i>
+                                <h6 class="card-title">Quản lý biến thể</h6>
+                                <small class="text-muted">Xem/chỉnh sửa biến thể</small>
+                                <br />
+                                <a asp-controller="Variants" asp-action="Index" asp-route-id="@Model.ProductID" class="btn btn-info btn-sm mt-2">
+                                    Quản lý
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function changeMainImage(imageUrl, element) {
+            $('#mainImage').fadeOut(200, function() {
+                $(this).attr('src', imageUrl).fadeIn(200);
+            });
+            $('.thumbnail-image').removeClass('border-primary').addClass('border-secondary');
+            $(element).removeClass('border-secondary').addClass('border-primary');
+        }
+
+        $(document).ready(function() {
+            // Thêm hover effect cho thumbnails
+            $('.thumbnail-image').hover(
+                function() {
+                    $(this).addClass('shadow-sm');
+                },
+                function() {
+                    $(this).removeClass('shadow-sm');
+                }
+            );
+
+            // Auto hide alerts
+            setTimeout(function() {
+                $('.alert-dismissible').fadeOut('slow');
+            }, 3000);
+
+            // Tooltip
+            $('[title]').tooltip();
+        });
+    </script>
+
+    <style>
+        .thumbnail-image {
+            transition: all 0.3s ease;
+            border-width: 2px !important;
+        }
+
+            .thumbnail-image:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+            }
+
+        .badge {
+            font-size: 0.75em;
+        }
+
+        .border-left-primary {
+            border-left: 4px solid #007bff !important;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        .btn-group .btn {
+            border-radius: 0.375rem;
+        }
+
+            .btn-group .btn:not(:last-child) {
+                margin-right: 0.25rem;
+            }
+
+        .table th {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .table td {
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+    </style>
+}

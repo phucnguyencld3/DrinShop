@@ -1,0 +1,276 @@
+﻿@model List<DrinShop.Models.Variant>
+@{
+    ViewData["Title"] = "Danh sách biến thể";
+    var productId = ViewBag.ProductId;
+    var productName = ViewBag.ProductName;
+    var searchTerm = ViewBag.SearchTerm;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-layer-group me-2"></i>
+                        Biến thể của sản phẩm: <strong>@productName</strong>
+                    </h5>
+                    <div class="btn-group">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@productId" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Về sản phẩm
+                        </a>
+                        <a asp-action="GenerateVariants" asp-route-id="@productId" class="btn btn-success btn-sm">
+                            <i class="fas fa-magic"></i> Tạo tự động
+                        </a>
+                        <a asp-action="Create" asp-route-productId="@productId" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Thêm thủ công
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Search + Count -->
+                    <div class="row mb-3">
+                        <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
+                            <form asp-action="Index" asp-route-id="@productId" method="get">
+                                <div class="input-group">
+                                    <input type="text" name="searchTerm" value="@searchTerm" class="form-control"
+                                           placeholder="Tìm kiếm biến thể...">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-6 col-sm-12 text-md-end text-sm-start">
+                            <small class="text-muted">
+                                Tìm thấy <strong>@Model.Count</strong> biến thể
+                            </small>
+                        </div>
+                    </div>
+
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Tên biến thể</th>
+                                        <th>Thuộc tính</th>
+                                        <th>SKU</th>
+                                        <th>Giá bán</th>
+                                        <th>Tồn kho</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày tạo</th>
+                                        <th width="150">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var variant in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@variant.VariantName</strong>
+                                                @if (!string.IsNullOrEmpty(variant.Description))
+                                                {
+                                                    <br />
+
+                                                    <small class="text-muted">@variant.Description</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (variant.VariantOptionValues != null && variant.VariantOptionValues.Any())
+                                                {
+                                                    foreach (var optionValue in variant.VariantOptionValues)
+                                                    {
+                                                        var pov = optionValue.ProductOptionValue;
+                                                        var po = pov?.ProductOption;
+
+                                                        if (po != null)
+                                                        {
+                                                            <span class="badge bg-primary me-1">
+                                                                @po.Name: @pov.Value
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning text-dark me-1">
+                                                                Thuộc tính không xác định: @pov?.Value
+                                                            </span>
+                                                        }
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Không có thuộc tính</span>
+                                                }
+                                            </td>
+                                            <td><code>@variant.SKU</code></td>
+                                            <td><strong class="text-success">@variant.UnitPrice.ToString("N0") ₫</strong></td>
+                                            <td>
+                                                <div class="input-group input-group-sm" style="max-width:120px;">
+                                                    <input type="number" class="form-control stock-input" value="@variant.Stock" min="0" data-variant-id="@variant.VariantID">
+                                                    <button class="btn btn-outline-secondary btn-sm update-stock-btn" data-variant-id="@variant.VariantID">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input status-toggle" type="checkbox"
+                                                    @(variant.Status ? "checked" : "")
+                                                           data-variant-id="@variant.VariantID">
+                                                    <label class="form-check-label">
+                                                        <span class="badge @(variant.Status ? "bg-success" : "bg-secondary")">
+                                                            @(variant.Status ? "Đang bán" : "Ngừng bán")
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @variant.CreateDate?.ToString("dd/MM/yyyy")
+                                                @if (!string.IsNullOrEmpty(variant.CreatedBy))
+                                                {
+                                                    <br />
+
+                                                    <small class="text-muted">bởi @variant.CreatedBy</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a asp-action="Details" asp-route-id="@variant.VariantID" class="btn btn-outline-info" title="Chi tiết">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a asp-action="Edit" asp-route-id="@variant.VariantID" class="btn btn-outline-primary" title="Chỉnh sửa">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-danger delete-variant-btn"
+                                                            data-variant-id="@variant.VariantID"
+                                                            data-variant-name="@variant.VariantName" title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-footer d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Tổng <strong>@Model.Count</strong> biến thể •
+                                <strong>@Model.Count(v => v.Status)</strong> đang bán •
+                                <strong>@Model.Sum(v => v.Stock)</strong> sản phẩm trong kho
+                            </small>
+                            <small class="text-muted">
+                                Click vào ô tồn kho để cập nhật nhanh
+                            </small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có biến thể nào</h5>
+                            <p class="text-muted">Sản phẩm này chưa có biến thể nào được tạo.</p>
+                            <div class="mt-4">
+                                <a asp-action="GenerateVariants" asp-route-id="@productId" class="btn btn-success">
+                                    <i class="fas fa-magic"></i> Tạo tự động
+                                </a>
+                                <a asp-action="Create" asp-route-productId="@productId" class="btn btn-primary ms-2">
+                                    <i class="fas fa-plus"></i> Thêm thủ công
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Update stock
+            $('.update-stock-btn').click(function() {
+                const variantId = $(this).data('variant-id');
+                const newStock = $(this).siblings('.stock-input').val();
+                const button = $(this);
+                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url: '@Url.Action("UpdateStock", "Variants")',
+                    type: 'POST',
+                    data: { variantId: variantId, newStock: newStock },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            button.html('<i class="fas fa-check text-success"></i>');
+                            setTimeout(() => button.html('<i class="fas fa-check"></i>'), 2000);
+                        } else toastr.error(response.message);
+                    },
+                    error: function() { toastr.error('Có lỗi xảy ra khi cập nhật tồn kho'); },
+                    complete: function() { button.prop('disabled', false); }
+                });
+            });
+
+            // Toggle status
+            $('.status-toggle').change(function() {
+                const variantId = $(this).data('variant-id');
+                const newStatus = $(this).prop('checked');
+                const toggle = $(this);
+                const badge = toggle.siblings('label').find('.badge');
+
+                $.ajax({
+                    url: '@Url.Action("ToggleStatus", "Variants")',
+                    type: 'POST',
+                    data: { variantId: variantId, status: newStatus },
+                    success: function(response) {
+                        if (response.success) {
+                            badge.removeClass('bg-success bg-secondary')
+                                 .addClass(newStatus ? 'bg-success' : 'bg-secondary')
+                                 .text(newStatus ? 'Đang bán' : 'Ngừng bán');
+                            toastr.success(response.message);
+                        } else {
+                            toggle.prop('checked', !newStatus);
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function() {
+                        toggle.prop('checked', !newStatus);
+                        toastr.error('Có lỗi xảy ra khi cập nhật trạng thái');
+                    }
+                });
+            });
+
+            // Delete variant
+            $('.delete-variant-btn').click(function() {
+                const variantId = $(this).data('variant-id');
+                const variantName = $(this).data('variant-name');
+
+                if (confirm(`Bạn có chắc chắn muốn xóa biến thể "${variantName}"?`)) {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Variants")',
+                        type: 'POST',
+                        data: { id: variantId },
+                        success: function(response) {
+                            if (response.success) {
+                                toastr.success(response.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else toastr.error(response.message);
+                        },
+                        error: function() { toastr.error('Có lỗi xảy ra khi xóa biến thể'); }
+                    });
+                }
+            });
+
+            // Enter key for stock input
+            $('.stock-input').keypress(function(e) {
+                if (e.which === 13) $(this).siblings('.update-stock-btn').click();
+            });
+        });
+    </script>
+}

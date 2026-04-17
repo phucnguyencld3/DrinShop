@@ -1,0 +1,299 @@
+﻿=== STARTING TRANSACTION ===
+Uploading image: 3--tea-rankings-photo--twinings.jpg
+'iisexpress.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.20\System.Runtime.Serialization.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'iisexpress.exe' (CoreCLR: clrhost): Loaded 'D:\SD20301\C#4\LamCaiNayNe\DrinShop\DrinShop\bin\Debug\net8.0\Newtonsoft.Json.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'iisexpress.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.20\System.Collections.NonGeneric.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'iisexpress.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.20\System.Runtime.Serialization.Formatters.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+✅ Image uploaded: https://res.cloudinary.com/dmqow0hu4/image/upload/v1764575018/drinshop/products/xadje8kj7fohhhpk7es6.jpg
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (5ms) [Parameters=[@p0='?' (Size = 100), @p1='?' (Size = 100), @p2='?' (DbType = DateTime2), @p3='?' (Size = 1000), @p4='?' (Precision = 18) (Scale = 2) (DbType = Decimal), @p5='?' (Size = 500), @p6='?' (Size = 300), @p7='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [Bundles] ([Code], [CreatedBy], [CreatedDate], [Description], [DiscountAmount], [ImageUrl], [Name], [Status])
+OUTPUT INSERTED.[BundleId]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+✅ Bundle saved with ID: 5
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (2ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+SELECT TOP(1) [v].[VariantID], [v].[CreateDate], [v].[CreatedBy], [v].[Description], [v].[ProductID], [v].[SKU], [v].[Status], [v].[Stock], [v].[UnitPrice], [v].[VariantName]
+FROM [Variants] AS [v]
+WHERE [v].[VariantID] = @__p_0
+Added item: Variant 13 x1
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (1ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+SELECT TOP(1) [v].[VariantID], [v].[CreateDate], [v].[CreatedBy], [v].[Description], [v].[ProductID], [v].[SKU], [v].[Status], [v].[Stock], [v].[UnitPrice], [v].[VariantName]
+FROM [Variants] AS [v]
+WHERE [v].[VariantID] = @__p_0
+Added item: Variant 17 x1
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (9ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32), @p2='?' (DbType = Int32), @p3='?' (DbType = Int32), @p4='?' (DbType = Int32), @p5='?' (DbType = Int32), @p15='?' (DbType = Int32), @p6='?' (DbType = DateTime2), @p7='?' (Size = 100), @p8='?' (Size = 1000), @p9='?' (DbType = Int32), @p10='?' (Size = 100), @p11='?' (DbType = Boolean), @p12='?' (DbType = Int32), @p13='?' (Precision = 18) (Scale = 2) (DbType = Decimal), @p14='?' (Size = 300), @p25='?' (DbType = Int32), @p16='?' (DbType = DateTime2), @p17='?' (Size = 100), @p18='?' (Size = 1000), @p19='?' (DbType = Int32), @p20='?' (Size = 100), @p21='?' (DbType = Boolean), @p22='?' (DbType = Int32), @p23='?' (Precision = 18) (Scale = 2) (DbType = Decimal), @p24='?' (Size = 300)], CommandType='Text', CommandTimeout='30']
+SET NOCOUNT ON;
+MERGE [BundleItems] USING (
+VALUES (@p0, @p1, @p2, 0),
+(@p3, @p4, @p5, 1)) AS i ([BundleId], [Quantity], [VariantId], _Position) ON 1=0
+WHEN NOT MATCHED THEN
+INSERT ([BundleId], [Quantity], [VariantId])
+VALUES (i.[BundleId], i.[Quantity], i.[VariantId])
+OUTPUT INSERTED.[BundleItemId], i._Position;
+UPDATE [Variants] SET [CreateDate] = @p6, [CreatedBy] = @p7, [Description] = @p8, [ProductID] = @p9, [SKU] = @p10, [Status] = @p11, [Stock] = @p12, [UnitPrice] = @p13, [VariantName] = @p14
+OUTPUT 1
+WHERE [VariantID] = @p15;
+UPDATE [Variants] SET [CreateDate] = @p16, [CreatedBy] = @p17, [Description] = @p18, [ProductID] = @p19, [SKU] = @p20, [Status] = @p21, [Stock] = @p22, [UnitPrice] = @p23, [VariantName] = @p24
+OUTPUT 1
+WHERE [VariantID] = @p25;
+✅ Processed 2 bundle items
+✅ TRANSACTION COMMITTED
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT [b].[BundleId], [b].[Code], [b].[CreatedBy], [b].[CreatedDate], [b].[Description], [b].[DiscountAmount], [b].[ImageUrl], [b].[Name], [b].[Status], [t].[BundleItemId], [t].[BundleId], [t].[Quantity], [t].[VariantId], [t].[VariantID0], [t].[CreateDate], [t].[CreatedBy], [t].[Description], [t].[ProductID], [t].[SKU], [t].[Status], [t].[Stock], [t].[UnitPrice], [t].[VariantName], [t].[ProductID0], [t].[BrandID], [t].[CategoryID], [t].[Code], [t].[CreateDate0], [t].[CreatedBy0], [t].[Description0], [t].[ProductName], [t].[Status0]
+FROM [Bundles] AS [b]
+LEFT JOIN (
+    SELECT [b0].[BundleItemId], [b0].[BundleId], [b0].[Quantity], [b0].[VariantId], [v].[VariantID] AS [VariantID0], [v].[CreateDate], [v].[CreatedBy], [v].[Description], [v].[ProductID], [v].[SKU], [v].[Status], [v].[Stock], [v].[UnitPrice], [v].[VariantName], [p].[ProductID] AS [ProductID0], [p].[BrandID], [p].[CategoryID], [p].[Code], [p].[CreateDate] AS [CreateDate0], [p].[CreatedBy] AS [CreatedBy0], [p].[Description] AS [Description0], [p].[ProductName], [p].[Status] AS [Status0]
+    FROM [BundleItems] AS [b0]
+    INNER JOIN [Variants] AS [v] ON [b0].[VariantId] = [v].[VariantID]
+    INNER JOIN [Products] AS [p] ON [v].[ProductID] = [p].[ProductID]
+) AS [t] ON [b].[BundleId] = [t].[BundleId]
+ORDER BY [b].[BundleId] DESC, [t].[BundleItemId], [t].[VariantID0]
+The thread '.NET TP Worker' (30228) has exited with code 0 (0x0).
+The thread '.NET TP Worker' (38376) has exited with code 0 (0x0).
+
+
+Console:
+Create:800 Price updated: {originalPrice: 0, discountAmount: 0, finalPrice: 0, totalItems: 0, bundleItemsData: '[]'}
+Create:1181 === INITIALIZATION COMPLETE ===
+Create:1182 Form exists: 1
+Create:1183 Selected items array: []
+Create:1184 Bundle items data field exists: 1
+Create:800 Price updated: {originalPrice: 0, discountAmount: 5000, finalPrice: 0, totalItems: 0, bundleItemsData: '[]'}
+Create:922 Variant select changed: {value: '13', disabled: false, button: button.btn.btn-success.btn-sm.btn-add-to-bundle}
+Create:931 === ADD TO BUNDLE CLICKED ===
+Create:938 Product ID: 1
+Create:939 Variant Select: 1
+Create:940 Selected Option Value: 13
+Create:951 Parsed Values: {variantId: 13, quantity: 1, stock: 11}
+Create:980 Added new item: {variantId: 13, productName: 'Cà phê sữa đá', variantName: 'M', price: 10000, quantity: 1, …}
+Create:983 Selected Items Array: [{…}]
+Create:800 Price updated: {originalPrice: 10000, discountAmount: 5000, finalPrice: 5000, totalItems: 1, bundleItemsData: '[{"variantId":13,"productName":"Cà phê sữa đá","va…979/drinshop/products/vqsdefie3yblqpepyudv.jpg"}]'}
+Create:1000 === ADD TO BUNDLE COMPLETED ===
+Create:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close btn-close-white>
+Ancestor with aria-hidden: <div.container-fluid> <div class=​"container-fluid" style=​"padding-top:​ 70px;​" aria-hidden=​"true">​…​</div>​<div class=​"row">​…​</div>​flex<nav class=​"col-md-3 col-lg-2 d-none d-md-block bg-light border-end sidebar">​…​</nav>​<!-- MAIN CONTENT --><main class=​"col-md-9 ms-sm-auto col-lg-10 px-md-4">​…​</main>​<div class=​"d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center
+                            pt-3 pb-2 mb-3 border-bottom">​…​</div>​flex<div class=​"alert alert-info">​…​</div>​<div class=​"container-fluid">​…​</div>​<!-- Breadcrumb --><nav aria-label=​"breadcrumb">​…​</nav>​<!-- Header --><div class=​"d-flex justify-content-between align-items-center mb-4">​…​</div>​flex<div class=​"row">​…​</div>​flex<!-- Cột trái: Form thông tin --><div class=​"col-lg-8">​…​</div>​<!-- Cột phải: Quản lý sản phẩm --><div class=​"col-lg-4">​…​</div>​<!-- Sản phẩm đã chọn --><div class=​"card border-success mb-4">​…​</div>​flex<div class=​"card-header bg-success text-white d-flex justify-content-between align-items-center">​…​</div>​flex<div class=​"card-body p-0" style=​"max-height:​ 400px;​ overflow-y:​ auto;​">​…​</div>​<div id=​"selectedItems">​…​</div>​<div class=​"border-bottom p-3" data-index=​"0">​…​</div>​<div class=​"row align-items-center">​…​</div>​flex<div class=​"col-3">​…​</div>​<div class=​"col-6">​…​</div>​<div class=​"col-3">​…​</div>​<div class=​"input-group input-group-sm">​…​</div>​flex<button type=​"button" class=​"btn btn-outline-secondary btn-decrease" data-index=​"0">​…​</button>​<input type=​"number" class=​"form-control text-center quantity-input" value=​"1" min=​"1" max=​"11" data-index=​"0">​<button type=​"button" class=​"btn btn-outline-secondary btn-increase" data-index=​"0">​…​</button>​</div>​<button type=​"button" class=​"btn btn-outline-danger btn-sm w-100 mt-1 btn-remove" data-index=​"0">​…​</button>​</div>​</div>​</div>​<div class=​"p-3 bg-light">​…​</div>​</div>​</div>​</div>​<!-- Thông tin tính toán --><div class=​"card border-info">​…​</div>​flex</div>​</div>​</div>​<!-- Modal thêm sản phẩm --><div class=​"modal fade show" id=​"addProductModal" tabindex=​"-1" aria-modal=​"true" role=​"dialog" style=​"display:​ block;​">​…​</div>​<!-- ✅ CẬP NHẬT: Debug buttons --><div class=​"card border-warning mt-4" id=​"debugPanel">​…​</div>​flex</main>​</div>​</div>​
+Create:922 Variant select changed: {value: '17', disabled: false, button: button.btn.btn-success.btn-sm.btn-add-to-bundle}
+Create:931 === ADD TO BUNDLE CLICKED ===
+Create:938 Product ID: 2
+Create:939 Variant Select: 1
+Create:940 Selected Option Value: 17
+Create:951 Parsed Values: {variantId: 17, quantity: 1, stock: 6}
+Create:980 Added new item: {variantId: 17, productName: 'Trà sửa HH', variantName: 'M - Chân châu đường đen', price: 15000, quantity: 1, …}
+Create:983 Selected Items Array: (2) [{…}, {…}]
+Create:800 Price updated: {originalPrice: 25000, discountAmount: 5000, finalPrice: 20000, totalItems: 2, bundleItemsData: '[{"variantId":13,"productName":"Cà phê sữa đá","va…05/drinshop/products/lmwnahyitlkjsemtnw0i.webp"}]'}
+Create:1000 === ADD TO BUNDLE COMPLETED ===
+Create:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close btn-close-white>
+Ancestor with aria-hidden: <div.modal fade#addProductModal> <div class=​"modal fade" id=​"addProductModal" tabindex=​"-1" style=​"display:​ block;​" aria-hidden=​"true">​…​</div>​
+Create:1039 === FORM SUBMITTING ===
+Create:1040 Selected items count: 2
+Create:1041 Selected items data: (2) [{…}, {…}]
+Create:1046 Form values: {name: 'Combo test 1', discountAmount: 5000}
+Create:1068 ✅ All validations passed
+Create:1069 Final bundle items data before submit: [{"variantId":13,"productName":"Cà phê sữa đá","variantName":"M","price":10000,"quantity":1,"stock":11,"image":"https://res.cloudinary.com/dmqow0hu4/image/upload/v1763520979/drinshop/products/vqsdefie3yblqpepyudv.jpg"},{"variantId":17,"productName":"Trà sửa HH","variantName":"M - Chân châu đường đen","price":15000,"quantity":1,"stock":6,"image":"https://res.cloudinary.com/dmqow0hu4/image/upload/v1763531905/drinshop/products/lmwnahyitlkjsemtnw0i.webp"}]
+Create:1072 === FORM DATA DEBUG ===
+Create:1074 BundleItemsData: [{"variantId":13,"productName":"Cà phê sữa đá","variantName":"M","price":10000,"quantity":1,"stock":11,"image":"https://res.cloudinary.com/dmqow0hu4/image/upload/v1763520979/drinshop/products/vqsdefie3yblqpepyudv.jpg"},{"variantId":17,"productName":"Trà sửa HH","variantName":"M - Chân châu đường đen","price":15000,"quantity":1,"stock":6,"image":"https://res.cloudinary.com/dmqow0hu4/image/upload/v1763531905/drinshop/products/lmwnahyitlkjsemtnw0i.webp"}]
+Create:1074 Code: COMBO2512011443210
+Create:1074 Name: Combo test 1
+Create:1074 DiscountAmount: 5000
+Create:1074 __Invariant: DiscountAmount
+Create:1074 Status: true
+Create:1074 Description: ádfghjk
+Create:1074 bundleImage: [object File]
+Create:1074 __RequestVerificationToken: CfDJ8PSp8iS5potAkiUAkBXAnu8EqkeJfhB7ABvLASgJ_u5FPYKYdlFlVm-Aw5XIezImp3Ff5P6lwUiBZ6fZFBqdx6ui_U_CkELcHNEdlOWtCCzuPByXJa-LjJrNMvpSjwLL5gM9CJ1EjteEIajtXK5_M0OZ5u5l-i1xv3ApZ64QMczLejf56IiKciD-gJngpQMAng
+Create:1074 Status: false
+Create:1076 === END FORM DATA DEBUG ===
+Create:1095 === AJAX SUCCESS ===
+Create:1096 Response: <!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qu&#x1EA3;n l&#xFD; Combo - Admin Panel</title>
+
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css?v=pAGv4ietcJNk_EwsQZ5BN9-K4MuNYS2a9wl4Jw-q9D0" />
+    <link rel="stylesheet" href="/css/admin.css?v=YFEsetnK7mAbUfErU-l6Jk-oYu3fJGVR60t3e1l1zGU" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    
+
+    <!-- ✅ XÓA: TOASTR CSS vì không cần -->
+</head>
+
+<body class="admin-layout">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow fixed-top">
+        <div class="container-fluid">
+
+            <!-- Brand -->
+            <a class="navbar-brand fw-bold" href="/admin/dashboard/index">
+                <i class="fas fa-tachometer-alt me-2"></i> Admin Panel
+            </a>
+
+            <!-- Toggle Button for Mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Right -->
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="/">
+                                    <i class="fas fa-globe text-primary me-2"></i> Về trang chính
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="/Account/Logout">
+                                    <button class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                    </button>
+                                <input name="__RequestVerificationToken" type="hidden" value="CfDJ8PSp8iS5potAkiUAkBXAnu_39iLOx-qQ17U8FRh0nIwdOWDu9aegG4WtW-V8COBgtExnBLZZ2rijV9_L6hcVKsX-HsHjcbiTpmMSwYkEJmJmaH93IAYqGPuOQ3z4YoakjfdVzb0Ow2TOXP7sNsVHrdbJEoHb2IggKCSJ7KbvaHjthksPh9VwyheY5UOFHxt08g" /></form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- SIDEBAR - OFFCANVAS FOR MOBILE -->
+    <div class="offcanvas offcanvas-start bg-light border-end" id="sidebarOffcanvas">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <div class="nav flex-column nav-pills p-2">
+
+    <!-- Dashboard -->
+    <a class="nav-link d-flex align-items-center
+        text-dark" href="/admin/dashboard/index">
+        <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+        Dashboard
+    </a>
+
+    <hr class="my-2">
+
+    <!-- QUẢN LÝ SẢN PHẨM -->
+    <h6 class="sidebar-heading text-dark fw-bold px-3">Quản lý sản phẩm</h6>
+
+    <a class="nav-link d-flex align-items-center
+        text-dark" href="/Admin/Products">
+        <i class="fas fa-box me-2 text-info"></i>
+        Sản phẩm
+    </a>
+
+    <a class="nav-link d-flex align-items-center
+        text-dark" href="/Admin/Variants/Overview">
+        <i class="fas fa-layer-group me-2 text-success"></i>
+        Biến thể
+    </a>
+
+    <a class="nav-link d-flex align-items-center
+        active bg-dark text-white fw-bold" href="/Admin/Bundle">
+        <i class="fas fa-box-open me-2 text-white"></i>
+        Combo
+    </a>
+
+    <a class="nav-link d-flex align-items-center
+        text-dark" href="/Admin/Categories">
+        <i class="fas fa-tags me-2 text-warning"></i>
+        Danh mục
+    </a>
+
+    <hr class="my-2">
+
+    <!-- QUẢN LÝ BÁN HÀNG -->
+    <h6 class="sidebar-heading text-dark fw-bold px-3">Quản lý bán hàng</h6>
+
+    <a class="nav-link d-flex align-items-center
+        text-dark" href="/Admin/Orders">
+        <i class="fas fa-shopping-cart me-2 text-danger"></i>
+        Đơn hàng
+    </a>
+
+        <hr class="my-2">
+        <h6 class="sidebar-heading text-dark fw-bold px-3">Hệ thống</h6>
+        <a class="nav-link d-flex align-items-center
+     
+Create:1097 Status: 200
+Create:1100 ❌ Server returned View (validation errors)
+Create:1135 === HTML RESPONSE ANALYSIS ===
+Create:1149 Hidden validation fields: 0
+Create:1151 First 3000 chars of response:
+Create:1152 <!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qu&#x1EA3;n l&#xFD; Combo - Admin Panel</title>
+
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css?v=pAGv4ietcJNk_EwsQZ5BN9-K4MuNYS2a9wl4Jw-q9D0" />
+    <link rel="stylesheet" href="/css/admin.css?v=YFEsetnK7mAbUfErU-l6Jk-oYu3fJGVR60t3e1l1zGU" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    
+
+    <!-- ✅ XÓA: TOASTR CSS vì không cần -->
+</head>
+
+<body class="admin-layout">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow fixed-top">
+        <div class="container-fluid">
+
+            <!-- Brand -->
+            <a class="navbar-brand fw-bold" href="/admin/dashboard/index">
+                <i class="fas fa-tachometer-alt me-2"></i> Admin Panel
+            </a>
+
+            <!-- Toggle Button for Mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Right -->
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="/">
+                                    <i class="fas fa-globe text-primary me-2"></i> Về trang chính
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="/Account/Logout">
+                                    <button class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                    </button>
+                                <input name="__RequestVerificationToken" type="hidden" value="CfDJ8PSp8iS5potAkiUAkBXAnu_39iLOx-qQ17U8FRh0nIwdOWDu9aegG4WtW-V8COBgtExnBLZZ2rijV9_L6hcVKsX-HsHjcbiTpmMSwYkEJmJmaH93IAYqGPuOQ3z4YoakjfdVzb0Ow2TOXP7sNsVHrdbJEoHb2IggKCSJ7KbvaHjthksPh9VwyheY5UOFHxt08g" /></form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+      

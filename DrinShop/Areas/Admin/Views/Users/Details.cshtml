@@ -1,0 +1,250 @@
+﻿@model DrinShop.Models.User
+
+@{
+    ViewData["Title"] = "Chi tiết khách hàng";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">
+        <i class="bi bi-person-lines-fill"></i> Chi tiết khách hàng
+    </h3>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left-circle-fill"></i> Quay lại danh sách
+    </a>
+</div>
+
+<!-- ✅ THÊM CẢNH BÁO NẾU CHƯA HOÀN TẤT -->
+@if (Model.IsFirstLogin)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading">
+            <i class="bi bi-exclamation-triangle-fill"></i> Người dùng này chưa hoàn tất thông tin cá nhân!
+        </h5>
+        <p class="mb-0">
+            User đã đăng ký/đăng nhập nhưng chưa bổ sung đầy đủ: địa chỉ, số điện thoại, v.v.
+        </p>
+        <hr>
+        <form asp-action="MarkAsComplete" asp-route-id="@Model.UserId"
+              method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-success btn-sm"
+                    onclick="return confirm('Đánh dấu user này đã hoàn tất thông tin?')">
+                <i class="bi bi-check-circle-fill"></i> Đánh dấu đã hoàn tất
+            </button>
+        </form>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-6 mb-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Thông tin chung</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Mã KH:</dt>
+                    <dd class="col-sm-8"><strong>@Model.UserId</strong></dd>
+
+                    <dt class="col-sm-4">Họ tên:</dt>
+                    <dd class="col-sm-8">
+                        @Model.FullName
+                        <!-- ✅ HIỂN THỊ BADGE TRẠNG THÁI -->
+                        @if (Model.IsFirstLogin)
+                        {
+                            <br />
+                            <span class="badge bg-warning text-dark mt-1">
+                                <i class="bi bi-hourglass-split"></i> Chưa hoàn tất
+                            </span>
+                        }
+                        else
+                        {
+                            <br />
+                            <span class="badge bg-success mt-1">
+                                <i class="bi bi-check-circle-fill"></i> Đã hoàn tất
+                            </span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Ngày sinh:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.DateOfBirth.HasValue)
+                        {
+                            @Model.DateOfBirth.Value.ToString("dd/MM/yyyy")
+                        }
+                        else
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Giới tính:</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            bool isMale = Model.Gender;
+                        }
+                        <span class="badge @(isMale ? "bg-info" : "bg-warning")">
+                            @(isMale ? "Nam" : "Nữ")
+                        </span>
+                    </dd>
+
+                    <hr class="my-2" />
+
+                    <dt class="col-sm-4">Số điện thoại:</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrEmpty(Model.Phone))
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Chưa có</span>
+                        }
+                        else
+                        {
+                            @Model.Phone
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">@Model.Email</dd>
+
+                    <!-- ✅ THÊM LOẠI TÀI KHOẢN -->
+                    <hr class="my-2" />
+                    <dt class="col-sm-4">Loại tài khoản:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.GoogleId))
+                        {
+                            <span class="badge bg-danger">
+                                <i class="bi bi-google"></i> Đăng nhập Google
+                            </span>
+                            <br />
+                            <small class="text-muted">Google ID: @Model.GoogleId</small>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary">
+                                <i class="bi bi-person-fill"></i> Đăng ký thường
+                            </span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> Thông tin Địa chỉ</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tỉnh/Thành phố:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Province != null && Model.ProvinceCode > 0)
+                        {
+                            @Model.Province.Name
+                        }
+                        else
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Quận/Huyện:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.District != null && Model.DistrictCode > 0)
+                        {
+                            @Model.District.Name
+                        }
+                        else
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Phường/Xã:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Ward != null && Model.WardCode > 0)
+                        {
+                            @Model.Ward.Name
+                        }
+                        else
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Địa chỉ chi tiết:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.StreetAddress))
+                        {
+                            @Model.StreetAddress
+                        }
+                        else
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Chưa có</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Địa chỉ đầy đủ:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Address))
+                        {
+                            @Model.Address
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-shield-check"></i> Trạng thái & Tài khoản</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Trạng thái:</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            bool isActive = Model.Status;
+                        }
+                        <span class="badge @(isActive ? "bg-success" : "bg-danger") fs-6">
+                            @(isActive ? "Hoạt động" : "Ngừng hoạt động")
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Ngày đăng ký:</dt>
+                    <dd class="col-sm-8">@(Model.RegisterDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</dd>
+
+                    @if (Model.ApplicationUser != null)
+                    {
+                        <hr class="my-2" />
+                        <dt class="col-sm-4">Tài khoản liên kết:</dt>
+                        <dd class="col-sm-8">@Model.ApplicationUser.UserName</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 pt-3 border-top">
+    <!-- ✅ THÊM NÚT BẬT/TẮT TRẠNG THÁI -->
+    <form asp-action="ToggleStatus" asp-route-id="@Model.UserId"
+          method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <button type="submit"
+                class="btn @(Model.Status ? "btn-warning" : "btn-success") me-2"
+                onclick="return confirm('Bạn có chắc chắn?')">
+            <i class="bi bi-@(Model.Status ? "slash-circle-fill" : "check-circle-fill")"></i>
+            @(Model.Status ? "Vô hiệu hóa tài khoản" : "Kích hoạt tài khoản")
+        </button>
+    </form>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle-fill"></i> Quay lại
+    </a>
+</div>

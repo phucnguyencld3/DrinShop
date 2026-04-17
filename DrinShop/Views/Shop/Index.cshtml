@@ -1,0 +1,250 @@
+﻿@model List<DrinShop.Models.Product>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var category = ViewBag.Category as DrinShop.Models.Category;
+    string pageTitle = category?.CategoryName ?? "Tất cả sản phẩm";
+    ViewData["Title"] = pageTitle;
+}
+
+@if (ViewBag.ShowBreadcrumb == true)
+{
+    @section Breadcrumb {
+        <li class="breadcrumb-item">
+            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Shop" asp-action="Index">Sản phẩm</a>
+        </li>
+        @if (category != null)
+        {
+            <li class="breadcrumb-item active">@category.CategoryName</li>
+        }
+    }
+}
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                @if (category != null)
+                {
+                    <i class="fas fa-list text-primary"></i> @category.CategoryName
+                    @if (!string.IsNullOrEmpty(category.Description))
+                    {
+                        <p class="text-muted">@category.Description</p>
+                    }
+                }
+                else
+                {
+                    <i class="fas fa-shopping-bag text-primary"></i> @pageTitle
+                }
+            </h2>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex justify-content-end">
+                <select class="form-select" onchange="sortProducts(this.value)">
+                    @if (ViewBag.SortBy == "newest")
+                    {
+                        <option value="newest" selected>Mới nhất</option>
+                    }
+                    else
+                    {
+                        <option value="newest">Mới nhất</option>
+                    }
+
+                    @if (ViewBag.SortBy == "oldest")
+                    {
+                        <option value="oldest" selected>Cũ nhất</option>
+                    }
+                    else
+                    {
+                        <option value="oldest">Cũ nhất</option>
+                    }
+
+                    @if (ViewBag.SortBy == "name")
+                    {
+                        <option value="name" selected>Tên A-Z</option>
+                    }
+                    else
+                    {
+                        <option value="name">Tên A-Z</option>
+                    }
+
+                    @if (ViewBag.SortBy == "price_asc")
+                    {
+                        <option value="price_asc" selected>Giá thấp → cao</option>
+                    }
+                    else
+                    {
+                        <option value="price_asc">Giá thấp → cao</option>
+                    }
+
+                    @if (ViewBag.SortBy == "price_desc")
+                    {
+                        <option value="price_desc" selected>Giá cao → thấp</option>
+                    }
+                    else
+                    {
+                        <option value="price_desc">Giá cao → thấp</option>
+                    }
+                </select>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var product in Model)
+            {
+                var defaultImage = product.ProductImages?.FirstOrDefault(pi => pi.IsDefault) 
+                                ?? product.ProductImages?.FirstOrDefault();
+                var minPrice = product.Variants?.Any() == true ? product.Variants.Min(v => v.UnitPrice) : 0;
+                var maxPrice = product.Variants?.Any() == true ? product.Variants.Max(v => v.UnitPrice) : 0;
+
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm product-card">
+                        <div class="position-relative">
+                            @if (defaultImage != null)
+                            {
+                                <img src="@defaultImage.ImageUrl" class="card-img-top" alt="@product.ProductName" 
+                                     style="height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                                     style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            }
+                            
+                            @if (product.Variants?.Any(v => v.Stock == 0) == true)
+                            {
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-2">Hết hàng</span>
+                            }
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">@product.ProductName</h6>
+                            
+                            @if (!string.IsNullOrEmpty(product.Description))
+                            {
+                                <p class="card-text text-muted small">
+                                    @(product.Description.Length > 60 ? product.Description.Substring(0, 60) + "..." : product.Description)
+                                </p>
+                            }
+                            
+                            <div class="mt-auto">
+                                @if (minPrice > 0)
+                                {
+                                    <div class="mb-2">
+                                        @if (minPrice == maxPrice)
+                                        {
+                                            <span class="h6 text-primary">@minPrice.ToString("N0") ₫</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="h6 text-primary">@minPrice.ToString("N0") ₫ - @maxPrice.ToString("N0") ₫</span>
+                                        }
+                                    </div>
+                                }
+                                
+                                <div class="d-grid">
+                                    <a asp-controller="Shop" asp-action="Product" asp-route-id="@product.ProductID" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> Xem chi tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action(ViewContext.RouteData.Values["action"].ToString(), 
+                                new { page = ViewBag.CurrentPage - 1, sortBy = ViewBag.SortBy })">
+                                Trước
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action(ViewContext.RouteData.Values["action"].ToString(), 
+                                new { page = i, sortBy = ViewBag.SortBy })">@i</a>
+                        </li>
+                    }
+
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action(ViewContext.RouteData.Values["action"].ToString(), 
+                                new { page = ViewBag.CurrentPage + 1, sortBy = ViewBag.SortBy })">
+                                Sau
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Không tìm thấy sản phẩm nào</h4>
+            <p class="text-muted">Hãy thử tìm kiếm với từ khóa khác hoặc xem tất cả sản phẩm.</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-eye"></i> Xem tất cả sản phẩm
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function sortProducts(sortBy) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sortBy', sortBy);
+            url.searchParams.set('page', '1');
+            window.location.href = url.toString();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const productCards = document.querySelectorAll('.product-card');
+            productCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.transition = 'transform 0.3s ease';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+
+    <style>
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .product-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+    </style>
+}

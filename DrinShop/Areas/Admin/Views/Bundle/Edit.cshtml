@@ -1,0 +1,643 @@
+﻿@model DrinShop.Models.Bundle
+
+@{
+    ViewData["Title"] = "Chỉnh sửa combo";
+    var products = ViewBag.Products as List<DrinShop.Models.Product>;
+    var calculatedPrice = ViewBag.CalculatedPrice as decimal? ?? 0;
+    var bundlePrice = Model.FinalPrice;
+}
+
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-box2-heart"></i> Quản lý combo
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Chỉnh sửa: @Model.Name</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-primary fw-bold">
+            <i class="bi bi-pencil-square"></i> Chỉnh sửa combo
+        </h1>
+        <div class="btn-group">
+            <a asp-action="Details" asp-route-id="@Model.BundleId" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i> Xem chi tiết
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Cột trái: Form thông tin -->
+        <div class="col-lg-8">
+            <div class="card border-primary shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Thông tin combo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <input type="hidden" asp-for="BundleId" />
+                        <input type="hidden" asp-for="CreatedBy" />
+                        <input type="hidden" asp-for="CreatedDate" />
+                        <input type="hidden" asp-for="ImageUrl" />
+                        <input type="hidden" asp-for="DiscountAmount" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Code" class="form-control" readonly />
+                                    <label asp-for="Code" class="text-primary fw-bold">
+                                        <i class="bi bi-hash"></i> Mã combo
+                                    </label>
+                                    <div class="form-text">
+                                        <i class="bi bi-lock"></i> Mã combo không thể thay đổi
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body d-flex align-items-center justify-content-center">
+                                        <div class="form-check form-switch">
+                                            <input asp-for="Status" class="form-check-input" type="checkbox" style="transform: scale(1.3);" />
+                                            <label asp-for="Status" class="form-check-label text-primary fw-bold ms-2">
+                                                <i class="bi bi-power"></i> Kích hoạt combo
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input asp-for="Name" class="form-control" placeholder="Tên combo" />
+                                    <label asp-for="Name" class="text-primary fw-bold">
+                                        <i class="bi bi-tag"></i> Tên combo *
+                                    </label>
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea asp-for="Description" class="form-control" style="height: 100px;" placeholder="Mô tả combo"></textarea>
+                                    <label asp-for="Description" class="text-primary fw-bold">
+                                        <i class="bi bi-journal-text"></i> Mô tả combo
+                                    </label>
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <!-- ✅ PHẦN QUẢN LÝ GIẢM GIÁ -->
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-primary fw-bold">
+                                            <i class="bi bi-percent"></i> Số tiền giảm giá
+                                        </label>
+                                        <div class="input-group">
+                                            <input id="discountAmountInput" class="form-control" type="number" min="0" step="1000" placeholder="0" value="@Model.DiscountAmount" />
+                                            <span class="input-group-text bg-danger text-white">₫</span>
+                                            <button type="button" class="btn btn-outline-primary" id="btnUpdateDiscount">
+                                                <i class="bi bi-check"></i> Áp dụng
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle text-primary"></i> Số tiền giảm từ giá gốc
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <!-- Bảng tính giá -->
+                                        <div class="card border-info h-100">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-primary mb-2">
+                                                    <i class="bi bi-calculator"></i> Tính toán giá
+                                                </h6>
+                                                <div class="row text-sm">
+                                                    <div class="col-12 mb-1">
+                                                        <span class="text-muted">Giá gốc:</span>
+                                                        <span class="float-end fw-bold" id="originalPriceDisplay">@Model.OriginalPrice.ToString("N0")₫</span>
+                                                    </div>
+                                                    <div class="col-12 mb-1">
+                                                        <span class="text-muted">Giảm giá:</span>
+                                                        <span class="float-end text-danger" id="discountDisplay">@Model.DiscountAmount.ToString("N0")₫ (@Model.DiscountPercentage%)</span>
+                                                    </div>
+                                                    <hr class="my-2">
+                                                    <div class="col-12">
+                                                        <span class="fw-bold text-primary">Giá bán:</span>
+                                                        <span class="float-end fw-bold text-success fs-6" id="finalPriceDisplay">@Model.FinalPrice.ToString("N0")₫</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ✅ THÔNG TIN TỒN KHO (READONLY) -->
+                            <div class="col-12">
+                                <div class="card border-info">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary mb-3">
+                                            <i class="bi bi-box"></i> Thông tin tồn kho
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <div class="h4 text-primary mb-1">@Model.AvailableStock</div>
+                                                    <small class="text-muted">Combo có thể bán</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="alert alert-info mb-0">
+                                                    <div class="d-flex">
+                                                        <i class="bi bi-info-circle me-2 mt-1"></i>
+                                                        <div>
+                                                            <strong>Lưu ý:</strong> Số lượng combo có thể bán được tính tự động dựa trên tồn kho của các sản phẩm bên trong.
+                                                            @if (Model.AvailableStock == 0)
+                                                            {
+                                                                <div class="text-danger mt-1">
+                                                                    <i class="bi bi-exclamation-triangle"></i> Combo hiện đã hết hàng!
+                                                                </div>
+                                                            }
+                                                            else if (Model.IsLowStock)
+                                                            {
+                                                                <div class="text-warning mt-1">
+                                                                    <i class="bi bi-exclamation-triangle"></i> Combo sắp hết hàng!
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload ảnh mới -->
+                        <div class="card border-secondary mt-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0 text-primary">
+                                    <i class="bi bi-image"></i> Cập nhật ảnh combo
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <input type="file" name="bundleImage" id="bundleImage" class="form-control" accept="image/*" />
+                                <div class="form-text">
+                                    Chọn ảnh mới để thay thế. Ảnh cũ sẽ bị xóa khi cập nhật.
+                                </div>
+
+                                <!-- Preview ảnh mới -->
+                                <div id="newImagePreview" class="mt-3 text-center" style="display: none;">
+                                    <p class="mb-2 text-primary fw-bold">Ảnh mới:</p>
+                                    <img id="previewImg" src="" alt="Preview" class="img-thumbnail border-primary" style="max-width: 200px;" />
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="removePreview">
+                                            <i class="bi bi-x-circle"></i> Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Cập nhật combo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Ảnh & Sản phẩm -->
+        <div class="col-lg-4">
+            <!-- Ảnh hiện tại -->
+            <div class="card border-info mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-image"></i> Ảnh hiện tại
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" id="currentBundleImage" alt="@Model.Name"
+                             class="img-fluid rounded border border-primary mb-3" style="max-height: 200px;" />
+                        <div>
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="btnDeleteImage" data-bundle-id="@Model.BundleId">
+                                <i class="bi bi-trash"></i> Xóa ảnh
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="py-4 bg-light rounded border">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">Chưa có ảnh</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Sản phẩm trong combo -->
+            <div class="card border-success">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-box-seam"></i> Sản phẩm trong combo
+                        <span class="badge bg-light text-dark">@(Model.BundleItems?.Count ?? 0)</span>
+                    </h6>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        <i class="bi bi-plus-circle text-success"></i>
+                    </button>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    @if (Model.BundleItems != null && Model.BundleItems.Any())
+                    {
+                        @foreach (var item in Model.BundleItems.OrderBy(bi => bi.BundleItemId))
+                        {
+                            var productImage = item.Variant?.Product?.ProductImages?
+                            .OrderByDescending(x => x.IsDefault)
+                            .ThenBy(x => x.SortOrder)
+                            .FirstOrDefault()?.ImageUrl ?? "/images/placeholder.png";
+                            var subtotal = item.Variant.UnitPrice * item.Quantity;
+
+                            <div class="border-bottom p-3" data-item-id="@item.BundleItemId">
+                                <div class="row align-items-center">
+                                    <div class="col-3">
+                                        <img src="@productImage" alt="@item.Variant.Product.ProductName"
+                                             class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;" />
+                                    </div>
+                                    <div class="col-6">
+                                        <strong class="d-block text-truncate">@item.Variant.Product.ProductName</strong>
+                                        <small class="text-muted">@item.Variant.VariantName</small>
+                                        <div class="mt-1">
+                                            <small class="text-success fw-bold">@subtotal.ToString("N0")₫</small>
+                                        </div>
+                                        <small class="text-info">Stock: @item.Variant.Stock</small>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="input-group input-group-sm">
+                                            <button type="button" class="btn btn-outline-secondary btn-decrease-qty" data-item-id="@item.BundleItemId">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <input type="number" class="form-control text-center quantity-input"
+                                                   value="@item.Quantity" min="1" data-item-id="@item.BundleItemId" />
+                                            <button type="button" class="btn btn-outline-secondary btn-increase-qty" data-item-id="@item.BundleItemId">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1 btn-remove-item" data-item-id="@item.BundleItemId">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="p-3 bg-light">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-primary">Tổng cộng:</strong>
+                                <strong class="text-primary">@calculatedPrice.ToString("N0")₫</strong>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2 mb-3">Chưa có sản phẩm</p>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm sản phẩm -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Thêm sản phẩm vào combo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" id="searchProduct" class="form-control" placeholder="Tìm kiếm sản phẩm..." />
+                    </div>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto;">
+                    @if (products != null && products.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var product in products)
+                            {
+                                var productImage = product.ProductImages?
+                                .OrderByDescending(x => x.IsDefault)
+                                .ThenBy(x => x.SortOrder)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/placeholder.png";
+
+                                <div class="list-group-item product-item" data-product-name="@product.ProductName.ToLower()">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <img src="@productImage" alt="@product.ProductName"
+                                                 class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;" />
+                                        </div>
+                                        <div class="col">
+                                            <h6 class="mb-1 text-primary">@product.ProductName</h6>
+                                            <small class="text-muted">
+                                                <i class="bi bi-tag"></i> @(product.Category?.CategoryName ?? "N/A")
+                                            </small>
+                                        </div>
+                                        <div class="col-auto">
+                                            @if (product.Variants != null && product.Variants.Any())
+                                            {
+                                                <select class="form-select form-select-sm variant-select mb-2" data-product-id="@product.ProductID">
+                                                    <option value="">-- Chọn biến thể --</option>
+                                                    @foreach (var variant in product.Variants.Where(v => v.Status && v.Stock > 0))
+                                                    {
+                                                        <option value="@variant.VariantID" data-price="@variant.UnitPrice" data-stock="@variant.Stock">
+                                                            @variant.VariantName - @variant.UnitPrice.ToString("N0")₫ (Còn: @variant.Stock)
+                                                        </option>
+                                                    }
+                                                </select>
+                                                <button type="button" class="btn btn-success btn-sm btn-add-variant"
+                                                        data-product-id="@product.ProductID" disabled>
+                                                    <i class="bi bi-plus"></i> Thêm vào combo
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning">Hết hàng</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Không có sản phẩm nào để thêm
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            const bundleId = @Model.BundleId;
+
+            // ✅ Cập nhật discount
+            $('#btnUpdateDiscount').click(function() {
+                const discountAmount = parseFloat($('#discountAmountInput').val()) || 0;
+
+                if (discountAmount < 0) {
+                    Swal.fire('Lỗi!', 'Số tiền giảm phải >= 0', 'error');
+                    return;
+                }
+
+                $.post('@Url.Action("UpdateDiscount")', {
+                    bundleId: bundleId,
+                    discountAmount: discountAmount
+                }).done(function(response) {
+                    if (response.success) {
+                        // Cập nhật hiển thị
+                        $('#originalPriceDisplay').text(response.data.originalPrice.toLocaleString() + '₫');
+                        $('#discountDisplay').text(response.data.discountAmount.toLocaleString() + '₫ (' + response.data.discountPercentage + '%)');
+                        $('#finalPriceDisplay').text(response.data.finalPrice.toLocaleString() + '₫');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Lỗi!', response.message, 'error');
+                    }
+                }).fail(function() {
+                    Swal.fire('Lỗi!', 'Có lỗi kết nối xảy ra', 'error');
+                });
+            });
+
+            // ✅ Tính toán realtime
+            $('#discountAmountInput').on('input', function() {
+                const originalPrice = @Model.OriginalPrice;
+                const discountAmount = parseFloat($(this).val()) || 0;
+                const finalPrice = Math.max(0, originalPrice - discountAmount);
+                const discountPercentage = originalPrice > 0 ? ((discountAmount / originalPrice) * 100).toFixed(1) : 0;
+
+                $('#discountDisplay').text(discountAmount.toLocaleString() + '₫ (' + discountPercentage + '%)');
+                $('#finalPriceDisplay').text(finalPrice.toLocaleString() + '₫');
+            });
+
+            // Preview ảnh mới
+            $('#bundleImage').change(function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#previewImg').attr('src', e.target.result);
+                        $('#newImagePreview').show();
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Xóa preview
+            $('#removePreview').click(function() {
+                $('#bundleImage').val('');
+                $('#newImagePreview').hide();
+                $('#previewImg').attr('src', '');
+            });
+
+            // Xóa ảnh combo
+            $('#btnDeleteImage').click(function() {
+                const bundleId = $(this).data('bundle-id');
+
+                Swal.fire({
+                    title: 'Xóa ảnh combo?',
+                    text: "Bạn có chắc chắn muốn xóa ảnh này?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("DeleteImage")', { bundleId: bundleId })
+                            .done(function(response) {
+                                if (response.success) {
+                                    $('#currentBundleImage').parent().html(`
+                                        <div class="py-4 bg-light rounded border">
+                                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2 mb-0">Chưa có ảnh</p>
+                                        </div>
+                                    `);
+                                    Swal.fire('Thành công!', response.message, 'success');
+                                } else {
+                                    Swal.fire('Lỗi!', response.message, 'error');
+                                }
+                            });
+                    }
+                });
+            });
+
+            // Tìm kiếm sản phẩm
+            $('#searchProduct').on('keyup', function() {
+                const searchText = $(this).val().toLowerCase();
+                $('.product-item').each(function() {
+                    const productName = $(this).data('product-name');
+                    $(this).toggle(productName.includes(searchText));
+                });
+            });
+
+            // Enable nút thêm khi chọn variant
+            $('.variant-select').change(function() {
+                const btn = $(this).siblings('.btn-add-variant');
+                btn.prop('disabled', !$(this).val());
+            });
+
+            // Thêm sản phẩm vào combo
+            $('.btn-add-variant').click(function() {
+                const variantSelect = $(this).siblings('.variant-select');
+                const variantId = variantSelect.val();
+
+                if (!variantId) return;
+
+                $.post('@Url.Action("AddItem")', {
+                    bundleId: bundleId,
+                    variantId: variantId,
+                    quantity: 1
+                }).done(function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Lỗi!', response.message, 'error');
+                    }
+                });
+            });
+
+            // ✅ Tăng/giảm số lượng sản phẩm trong combo
+            $('.btn-increase-qty, .btn-decrease-qty').click(function() {
+                const itemId = $(this).data('item-id');
+                const isIncrease = $(this).hasClass('btn-increase-qty');
+                const quantityInput = $(`.quantity-input[data-item-id="${itemId}"]`);
+                const currentQty = parseInt(quantityInput.val());
+                const newQty = isIncrease ? currentQty + 1 : Math.max(1, currentQty - 1);
+
+                updateItemQuantity(itemId, newQty);
+            });
+
+            // ✅ Thay đổi trực tiếp số lượng
+            $('.quantity-input').change(function() {
+                const itemId = $(this).data('item-id');
+                const newQty = Math.max(1, parseInt($(this).val()) || 1);
+                updateItemQuantity(itemId, newQty);
+            });
+
+            // ✅ Xóa sản phẩm khỏi combo
+            $('.btn-remove-item').click(function() {
+                const itemId = $(this).data('item-id');
+
+                Swal.fire({
+                    title: 'Xóa sản phẩm?',
+                    text: "Bạn có chắc chắn muốn xóa sản phẩm này khỏi combo?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("RemoveItem")', { bundleItemId: itemId })
+                            .done(function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Thành công!',
+                                        text: response.message,
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Lỗi!', response.message, 'error');
+                                }
+                            });
+                    }
+                });
+            });
+
+            // ✅ Function cập nhật số lượng
+            function updateItemQuantity(itemId, newQty) {
+                $.post('@Url.Action("UpdateItemQuantity")', {
+                    bundleItemId: itemId,
+                    newQuantity: newQty
+                }).done(function(response) {
+                    if (response.success) {
+                        location.reload(); // Reload để cập nhật giá và stock
+                    } else {
+                        Swal.fire('Lỗi!', response.message, 'error');
+                        location.reload(); // Reload để reset về trạng thái cũ
+                    }
+                }).fail(function() {
+                    Swal.fire('Lỗi!', 'Có lỗi kết nối xảy ra', 'error');
+                    location.reload();
+                });
+            }
+        });
+    </script>
+}
+

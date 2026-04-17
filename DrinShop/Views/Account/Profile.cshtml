@@ -1,0 +1,334 @@
+﻿@model DrinShop.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<style>
+    /* Primary: #6C4E31 - Nâu sữa, #DCC5A1 - Be kem */
+    /* Secondary: #F5E9DA - Nền sáng, #A67C52 - Nâu nhạt */
+    /* Accent: #8BC34A - Xanh matcha nhẹ */
+    /* Text: #2A2A2A - Đen xám dễ đọc */
+
+    :root {
+        --bs-primary: #6C4E31; /* Nâu sữa */
+        --bs-primary-light: #DCC5A1; /* Be kem */
+        --bs-secondary: #A67C52; /* Nâu nhạt */
+        --bs-light-background: #F5E9DA; /* Nền sáng */
+        --bs-accent: #8BC34A; /* Xanh matcha nhẹ */
+        --bs-text-color: #2A2A2A; /* Đen xám dễ đọc */
+    }
+
+    body {
+        background-color: var(--bs-light-background);
+        color: var(--bs-text-color);
+    }
+
+    .card {
+        border: 1px solid var(--bs-primary-light) !important;
+    }
+
+    /* Áp dụng màu cho các thành phần chính của form */
+    .text-primary, a.text-primary {
+        color: var(--bs-primary) !important;
+    }
+
+    .card-header.bg-primary {
+        background-color: var(--bs-primary) !important;
+        color: white !important;
+    }
+
+    .btn-primary {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--bs-primary);
+        --bs-btn-border-color: var(--bs-primary);
+        --bs-btn-hover-bg: var(--bs-secondary);
+        --bs-btn-hover-border-color: var(--bs-secondary);
+        --bs-btn-active-bg: var(--bs-secondary);
+        --bs-btn-active-border-color: var(--bs-secondary);
+    }
+
+    .btn-outline-primary {
+        --bs-btn-color: var(--bs-primary);
+        --bs-btn-border-color: var(--bs-primary);
+        --bs-btn-hover-color: #fff;
+        --bs-btn-hover-bg: var(--bs-primary);
+        --bs-btn-hover-border-color: var(--bs-primary);
+    }
+
+    .btn-secondary {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--bs-secondary);
+        --bs-btn-border-color: var(--bs-secondary);
+        --bs-btn-hover-bg: #8c6a46; /* Màu nâu đậm hơn */
+        --bs-btn-hover-border-color: #8c6a46;
+    }
+
+    .btn-success {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--bs-accent);
+        --bs-btn-border-color: var(--bs-accent);
+        --bs-btn-hover-bg: #6e993f; /* Màu xanh đậm hơn */
+        --bs-btn-hover-border-color: #6e993f;
+    }
+
+    .btn-warning {
+        --bs-btn-color: var(--bs-text-color);
+        --bs-btn-bg: #ffc107;
+        --bs-btn-border-color: #ffc107;
+        --bs-btn-hover-bg: #e0a800;
+        --bs-btn-hover-border-color: #e0a800;
+    }
+
+    /* Cập nhật màu thông báo */
+    .alert-info {
+        color: #055160;
+        background-color: #cff4fc;
+        border-color: #b6effb;
+    }
+
+    .alert-success {
+        color: #0f5132;
+        background-color: #d1e7dd;
+        border-color: #badbcc;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
+
+@if (ViewBag.ShowCompleteProfileAlert == true)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="bi bi-info-circle"></i>
+        <strong>Thông báo:</strong> @ViewBag.AlertMessage
+        <a href="@Url.Action("CompleteProfile")" class="btn btn-sm btn-outline-primary ms-2">
+            <i class="bi bi-pencil-square"></i> Bổ sung ngay
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-circle"></i> Hồ sơ cá nhân</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    <form asp-action="Profile" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Thông tin cơ bản</h6>
+
+                                <div class="mb-3">
+                                    <label asp-for="FullName" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                                    <input asp-for="FullName" class="form-control" />
+                                    <span asp-validation-for="FullName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input asp-for="Email" class="form-control" type="email" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Phone" class="form-label">Số điện thoại</label>
+                                    <input asp-for="Phone" class="form-control" />
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                    <div>
+                                        <div class="form-check form-check-inline">
+                                            <input asp-for="Gender" class="form-check-input" type="radio" value="true" id="male">
+                                            <label class="form-check-label" for="male">Nam</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input asp-for="Gender" class="form-check-input" type="radio" value="false" id="female">
+                                            <label class="form-check-label" for="female">Nữ</label>
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="Gender" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Địa chỉ</h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tỉnh/Thành phố</label>
+                                    <select id="provinceSelect" name="ProvinceCode" class="form-select">
+                                        <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                        @foreach (var province in ViewBag.Provinces as List<SelectListItem>)
+                                        {
+                                            <option value="@province.Value" selected="@(province.Value == Model.ProvinceCode?.ToString())">@province.Text</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Quận/Huyện</label>
+                                    <select id="districtSelect" name="DistrictCode" class="form-select" disabled>
+                                        <option value="">-- Chọn Quận/Huyện --</option>
+                                        @if (Model.DistrictCode.HasValue)
+                                        {
+                                            <option value="@Model.DistrictCode" selected>@Model.DistrictName</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Phường/Xã</label>
+                                    <select id="wardSelect" name="WardCode" class="form-select" disabled>
+                                        <option value="">-- Chọn Phường/Xã --</option>
+                                        @if (Model.WardCode.HasValue)
+                                        {
+                                            <option value="@Model.WardCode" selected>@Model.WardName</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="StreetAddress" class="form-label">Địa chỉ cụ thể</label>
+                                    <input asp-for="StreetAddress" class="form-control" placeholder="Số nhà, tên đường..." />
+                                    <span asp-validation-for="StreetAddress" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Address" class="form-label">Ghi chú địa chỉ</label>
+                                    <textarea asp-for="Address" class="form-control" rows="3" placeholder="Ghi chú thêm về địa chỉ..."></textarea>
+                                    <span asp-validation-for="Address" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                            <div>
+                                <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-warning me-2">
+                                    <i class="bi bi-lock"></i> Đổi mật khẩu
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Cập nhật
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            var districtCodeInitial = @(Model.DistrictCode.HasValue ? Model.DistrictCode.Value.ToString() : "null");
+            var wardCodeInitial = @(Model.WardCode.HasValue ? Model.WardCode.Value.ToString() : "null");
+            var isInitialLoad = true;
+
+            function loadDistricts(provinceCode, callback) {
+                var districtSelect = $('#districtSelect');
+                districtSelect.html('<option value="">-- Chọn Quận/Huyện --</option>').prop('disabled', true);
+                $('#wardSelect').html('<option value="">-- Chọn Phường/Xã --</option>').prop('disabled', true);
+
+                if (provinceCode) {
+                    $.get('@Url.Action("GetDistricts", "Account")', { provinceCode: provinceCode })
+                        .done(function(data) {
+                            districtSelect.prop('disabled', false);
+                            $.each(data, function(index, item) {
+                                districtSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
+                            });
+                            if (callback) callback();
+                        });
+                }
+            }
+
+            function loadWards(districtCode, callback) {
+                var wardSelect = $('#wardSelect');
+                wardSelect.html('<option value="">-- Chọn Phường/Xã --</option>').prop('disabled', true);
+
+                if (districtCode) {
+                    $.get('@Url.Action("GetWards", "Account")', { districtCode: districtCode })
+                        .done(function(data) {
+                            wardSelect.prop('disabled', false);
+                            $.each(data, function(index, item) {
+                                wardSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
+                            });
+                            if (callback) callback();
+                        });
+                }
+            }
+
+            // Xử lý sự kiện thay đổi Tỉnh/Thành phố
+            $('#provinceSelect').change(function() {
+                loadDistricts($(this).val(), function() {
+                    // Nếu là lần tải ban đầu và có DistrictCode, tự động chọn District
+                    if (isInitialLoad && districtCodeInitial) {
+                        $('#districtSelect').val(districtCodeInitial).trigger('change');
+                        districtCodeInitial = null; // Đảm bảo chỉ chạy 1 lần
+                    }
+                });
+            });
+
+            // Xử lý sự kiện thay đổi Quận/Huyện
+            $('#districtSelect').change(function() {
+                loadWards($(this).val(), function() {
+                    // Nếu là lần tải ban đầu và có WardCode, tự động chọn Ward
+                    if (isInitialLoad && wardCodeInitial) {
+                        $('#wardSelect').val(wardCodeInitial);
+                        wardCodeInitial = null; // Đảm bảo chỉ chạy 1 lần
+                        isInitialLoad = false; // Đã tải xong dữ liệu ban đầu
+                    } else if (!isInitialLoad) {
+                        // Nếu không phải lần tải ban đầu, thì là do người dùng tự thay đổi District
+                        isInitialLoad = false;
+                    }
+                });
+            });
+
+            // Tải dữ liệu ban đầu khi trang được tải (chỉ khi có ProvinceCode)
+            if ($('#provinceSelect').val()) {
+                // Kích hoạt sự kiện thay đổi để tải Districts và Wards
+                // Dùng setTimeout để đảm bảo các giá trị ban đầu được thiết lập đúng sau khi AJAX load xong
+                loadDistricts($('#provinceSelect').val(), function() {
+                    if (districtCodeInitial) {
+                        $('#districtSelect').val(districtCodeInitial);
+                        loadWards(districtCodeInitial, function() {
+                            if (wardCodeInitial) {
+                                $('#wardSelect').val(wardCodeInitial);
+                            }
+                            isInitialLoad = false;
+                        });
+                    } else {
+                        isInitialLoad = false;
+                    }
+                });
+            } else {
+                 isInitialLoad = false;
+            }
+        });
+    </script>
+}

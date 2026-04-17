@@ -1,0 +1,390 @@
+﻿@model DrinShop.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+    // Tùy chỉnh Breadcrumb (nếu Layout hỗ trợ)
+    ViewBag.ShowBreadcrumb = true;
+}
+
+<style>
+    /* Primary: #6C4E31 - Nâu sữa, #DCC5A1 - Be kem */
+    /* Secondary: #F5E9DA - Nền sáng, #A67C52 - Nâu nhạt */
+    /* Accent: #8BC34A - Xanh matcha nhẹ */
+    /* Text: #2A2A2A - Đen xám dễ đọc */
+
+    :root {
+        --bs-primary: #6C4E31; /* Nâu sữa */
+        --bs-primary-light: #DCC5A1; /* Be kem */
+        --bs-secondary: #A67C52; /* Nâu nhạt */
+        --bs-light-background: #F5E9DA; /* Nền sáng */
+        --bs-accent: #8BC34A; /* Xanh matcha nhẹ */
+        --bs-text-color: #2A2A2A; /* Đen xám dễ đọc */
+    }
+
+    /* Áp dụng màu cho các thành phần chính của form */
+    .text-primary, a.text-primary {
+        color: var(--bs-primary) !important;
+    }
+
+    .btn-primary {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--bs-primary);
+        --bs-btn-border-color: var(--bs-primary);
+        --bs-btn-hover-bg: var(--bs-secondary);
+        --bs-btn-hover-border-color: var(--bs-secondary);
+        --bs-btn-active-bg: var(--bs-secondary);
+        --bs-btn-active-border-color: var(--bs-secondary);
+    }
+
+    .card-header.bg-primary {
+        background-color: var(--bs-primary) !important;
+    }
+
+    .card {
+        border-color: var(--bs-primary-light) !important;
+    }
+
+    body {
+        background-color: var(--bs-light-background);
+        color: var(--bs-text-color);
+    }
+
+    .form-label, .fw-bold {
+        color: var(--bs-text-color) !important;
+    }
+
+    /* Đổi màu alert-danger cho dễ nhìn hơn trên nền sáng */
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+</style>
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" style="color: var(--bs-text-color);">Trang chủ</a></li>
+    <li class="breadcrumb-item active" aria-current="page" style="color: var(--bs-primary);">Đăng ký</li>
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3 class="mb-0 fw-bold"><i class="bi bi-person-plus-fill me-2"></i> @ViewData["Title"]</h3>
+                </div>
+
+                <div class="card-body p-4 p-md-5" style="background-color: var(--bs-light-background);">
+                    <form asp-action="Register" method="post" id="registerForm">
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <h5 class="text-primary mb-3 pb-1 border-bottom border-primary"><i class="bi bi-key-fill me-2"></i> Thông tin đăng nhập</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="UserName" class="form-label fw-bold"></label>
+                                <input asp-for="UserName" class="form-control" placeholder="Tên đăng nhập (ví dụ: khachhang123)" />
+                                <span asp-validation-for="UserName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label fw-bold"></label>
+                                <input asp-for="Email" class="form-control" placeholder="example@drinshop.com" type="email" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Password" class="form-label fw-bold"></label>
+                                <input asp-for="Password" class="form-control" placeholder="Mật khẩu (tối thiểu 6 ký tự)" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label fw-bold"></label>
+                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu để xác nhận" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" style="border-top: 1px solid var(--bs-primary-light);" />
+
+                        <h5 class="text-primary mb-3 pb-1 border-bottom border-primary"><i class="bi bi-person-fill me-2"></i> Thông tin cá nhân</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FullName" class="form-label fw-bold"></label>
+                                <input asp-for="FullName" class="form-control" placeholder="Họ và tên đầy đủ" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PhoneNumber" class="form-label fw-bold"></label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="Số điện thoại di động" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Gender" class="form-label fw-bold"></label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">-- Chọn giới tính --</option>
+                                    <option value="true">Nam</option>
+                                    <option value="false">Nữ</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DateOfBirth" class="form-label fw-bold"></label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" style="border-top: 1px solid var(--bs-primary-light);" />
+
+                        <h5 class="text-primary mb-3 pb-1 border-bottom border-primary"><i class="bi bi-geo-alt-fill me-2"></i> Địa chỉ giao hàng</h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ProvinceCode" class="form-label fw-bold"></label>
+                                <select asp-for="ProvinceCode" id="provinceSelect" class="form-select address-select">
+                                    <option value="">-- Tải dữ liệu... --</option>
+                                </select>
+                                <span asp-validation-for="ProvinceCode" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="DistrictCode" class="form-label fw-bold"></label>
+                                <select asp-for="DistrictCode" id="districtSelect" class="form-select" disabled>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                </select>
+                                <span asp-validation-for="DistrictCode" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="WardCode" class="form-label fw-bold"></label>
+                                <select asp-for="WardCode" id="wardSelect" class="form-select" disabled>
+                                    <option value="">-- Chọn Phường/Xã --</option>
+                                </select>
+                                <span asp-validation-for="WardCode" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Address" class="form-label fw-bold"></label>
+                                <input asp-for="Address" class="form-control" placeholder="Tên đường, khu vực (Ví dụ: Đường Cầu Giấy)" />
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StreetAddress" class="form-label fw-bold"></label>
+                                <input asp-for="StreetAddress" class="form-control" placeholder="Số nhà, tên tòa nhà, số căn hộ (Ví dụ: Số 20, ngõ 12)" />
+                                <span asp-validation-for="StreetAddress" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg" id="registerButton">
+                                <i class="bi bi-person-check-fill me-2"></i> ĐĂNG KÝ TÀI KHOẢN
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0" style="color: var(--bs-text-color);">
+                                Bạn đã là thành viên của DrinShop?
+                                <a asp-action="Login" class="text-primary fw-bold text-decoration-none">Đăng nhập ngay</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const API_URL = 'https://provinces.open-api.vn/api/?depth=3';
+        let addressData = [];
+        const provinceSelect = document.getElementById('provinceSelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const wardSelect = document.getElementById('wardSelect');
+        const registerButton = document.getElementById('registerButton');
+
+        if (!provinceSelect || !districtSelect || !wardSelect) {
+            console.error('Address select elements not found');
+            return;
+        }
+
+        // Hàm Reset Select Box
+        function resetSelect(selectElement, defaultText, disable = true) {
+            if (!selectElement) return;
+            selectElement.innerHTML = `<option value="">-- ${defaultText} --</option>`;
+            selectElement.disabled = disable;
+        }
+
+        // Load toàn bộ dữ liệu địa chỉ 1 lần
+        async function loadAllAddressData() {
+            console.log('Bắt đầu load dữ liệu địa chỉ...');
+            if (provinceSelect) {
+                provinceSelect.disabled = true;
+            }
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                addressData = await response.json();
+                console.log('Đã load', addressData.length, 'tỉnh/thành phố');
+
+                // 1. Load danh sách tỉnh/thành phố
+                resetSelect(provinceSelect, 'Chọn Tỉnh/Thành phố', false);
+
+                if (addressData && Array.isArray(addressData)) {
+                    addressData.forEach(province => {
+                        if (province && province.code && province.name) {
+                            const option = document.createElement('option');
+                            option.value = province.code;
+                            option.textContent = province.name;
+                            provinceSelect.appendChild(option);
+                        }
+                    });
+                }
+
+                // Safe model binding restoration
+                const selectedProvinceCode = '@(Model?.ProvinceCode ?? "")';
+                if (selectedProvinceCode && provinceSelect) {
+                    provinceSelect.value = selectedProvinceCode;
+                    loadDistricts(selectedProvinceCode, '@(Model?.DistrictCode ?? "")');
+                }
+
+                console.log('Đã load thành công!');
+            } catch (error) {
+                console.error('Lỗi chi tiết:', error);
+                resetSelect(provinceSelect, 'Lỗi tải dữ liệu', true);
+
+                // Show user-friendly error with toastr if available
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Không thể tải dữ liệu địa chỉ. Vui lòng thử lại sau.', 'Lỗi tải dữ liệu');
+                } else {
+                    alert('Không thể tải dữ liệu địa chỉ. Vui lòng kiểm tra kết nối mạng và thử lại sau.');
+                }
+            }
+        }
+
+        // Load Quận/Huyện
+        function loadDistricts(provinceCode, selectedDistrictCode = null) {
+            resetSelect(districtSelect, 'Chọn Quận/Huyện');
+            resetSelect(wardSelect, 'Chọn Phường/Xã');
+
+            if (!provinceCode || !addressData) return;
+
+            const province = addressData.find(p => p && p.code == provinceCode);
+            if (province && province.districts && Array.isArray(province.districts)) {
+                province.districts.forEach(district => {
+                    if (district && district.code && district.name) {
+                        const option = document.createElement('option');
+                        option.value = district.code;
+                        option.textContent = district.name;
+                        districtSelect.appendChild(option);
+                    }
+                });
+
+                if (districtSelect) {
+                    districtSelect.disabled = false;
+                }
+                console.log('Đã load', province.districts.length, 'quận/huyện');
+
+                if (selectedDistrictCode) {
+                    districtSelect.value = selectedDistrictCode;
+                    loadWards(provinceCode, selectedDistrictCode, '@(Model?.WardCode ?? "")');
+                }
+            }
+        }
+
+        // Load Phường/Xã
+        function loadWards(provinceCode, districtCode, selectedWardCode = null) {
+            resetSelect(wardSelect, 'Chọn Phường/Xã');
+
+            if (!districtCode || !addressData) return;
+
+            const province = addressData.find(p => p && p.code == provinceCode);
+            const district = province?.districts?.find(d => d && d.code == districtCode);
+
+            if (district && district.wards && Array.isArray(district.wards)) {
+                district.wards.forEach(ward => {
+                    if (ward && ward.code && ward.name) {
+                        const option = document.createElement('option');
+                        option.value = ward.code;
+                        option.textContent = ward.name;
+                        wardSelect.appendChild(option);
+                    }
+                });
+
+                if (wardSelect) {
+                    wardSelect.disabled = false;
+                }
+                console.log('Đã load', district.wards.length, 'phường/xã');
+
+                if (selectedWardCode && wardSelect) {
+                    wardSelect.value = selectedWardCode;
+                }
+            }
+        }
+
+        // Event Listeners
+        if (provinceSelect) {
+            provinceSelect.addEventListener('change', function() {
+                loadDistricts(this.value);
+            });
+        }
+
+        if (districtSelect) {
+            districtSelect.addEventListener('change', function() {
+                const provinceCode = provinceSelect ? provinceSelect.value : '';
+                loadWards(provinceCode, this.value);
+            });
+        }
+
+        // Form validation
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                if (this.checkValidity()) {
+                    const province = provinceSelect ? provinceSelect.value : '';
+                    const district = districtSelect ? districtSelect.value : '';
+                    const ward = wardSelect ? wardSelect.value : '';
+
+                    if (!province || !district || !ward) {
+                        e.preventDefault();
+
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Vui lòng chọn đầy đủ Tỉnh/TP, Quận/Huyện, và Phường/Xã!', 'Thiếu thông tin địa chỉ');
+                        } else {
+                            alert('Vui lòng chọn đầy đủ Tỉnh/TP, Quận/Huyện, và Phường/Xã!');
+                        }
+                        return false;
+                    }
+                }
+            });
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                loadAllAddressData();
+            } catch (error) {
+                console.error('Error initializing address data:', error);
+            }
+        });
+    </script>
+}

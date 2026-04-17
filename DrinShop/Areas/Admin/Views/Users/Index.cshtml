@@ -1,0 +1,235 @@
+﻿@model IEnumerable<DrinShop.Models.User>
+
+@{
+    ViewData["Title"] = "Danh sách người dùng";
+    var filter = ViewBag.Filter as string;
+    var totalUsers = ViewBag.TotalUsers;
+    var incompleteUsers = ViewBag.IncompleteUsers;
+    var completeUsers = ViewBag.CompleteUsers;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Danh sách người dùng</h2>
+
+    <!-- ✅ THÊM NÚT LỌC -->
+    <div class="btn-group" role="group">
+        <a asp-action="Index"
+           class="btn btn-sm @(string.IsNullOrEmpty(filter) ? "btn-primary" : "btn-outline-primary")">
+            <i class="bi bi-list"></i> Tất cả
+            <span class="badge bg-light text-dark">@totalUsers</span>
+        </a>
+        <a asp-action="Index" asp-route-filter="incomplete"
+           class="btn btn-sm @(filter == "incomplete" ? "btn-warning" : "btn-outline-warning")">
+            <i class="bi bi-exclamation-triangle-fill"></i> Chưa hoàn tất
+            <span class="badge bg-light text-dark">@incompleteUsers</span>
+        </a>
+        <a asp-action="Index" asp-route-filter="complete"
+           class="btn btn-sm @(filter == "complete" ? "btn-success" : "btn-outline-success")">
+            <i class="bi bi-check-circle-fill"></i> Đã hoàn tất
+            <span class="badge bg-light text-dark">@completeUsers</span>
+        </a>
+    </div>
+</div>
+
+@if (TempData["success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- ✅ THÊM THÔNG BÁO CẢNH BÁO -->
+@if (incompleteUsers > 0 && string.IsNullOrEmpty(filter))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-info-circle-fill"></i>
+        Có <strong>@incompleteUsers người dùng</strong> chưa hoàn tất thông tin cá nhân.
+        <a asp-action="Index" asp-route-filter="incomplete" class="alert-link">Xem danh sách</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>STT</th>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Điện thoại</th>
+                            <th class="text-center">Loại TK</th> <!-- ✅ THÊM CỘT -->
+                            <th class="text-center">Trạng thái TT</th> <!-- ✅ THÊM CỘT -->
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int stt = 1;
+                        }
+                        @foreach (var user in Model)
+                        {
+                            <!-- ✅ HIGHLIGHT MÀU VÀNG CHO USER CHƯA HOÀN TẤT -->
+                            <tr class="@(user.IsFirstLogin ? "table-warning" : "")">
+                                <td>@stt</td>
+                                <td>
+                                    @user.FullName
+                                    @if (user.IsFirstLogin)
+                                    {
+                                        <br />
+                                        <small class="text-warning">
+                                            <i class="bi bi-exclamation-circle-fill"></i> Chưa bổ sung
+                                        </small>
+                                    }
+                                </td>
+                                <td>@user.Email</td>
+                                <td>
+                                    @if (string.IsNullOrEmpty(user.Phone))
+                                    {
+                                        <span class="text-muted fst-italic">Chưa có</span>
+                                    }
+                                    else
+                                    {
+                                        @user.Phone
+                                    }
+                                </td>
+                                <!-- ✅ CỘT LOẠI TÀI KHOẢN -->
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(user.GoogleId))
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-google"></i> Google
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-person-fill"></i> Thường
+                                        </span>
+                                    }
+                                </td>
+                                <!-- ✅ CỘT TRẠNG THÁI HOÀN TẤT -->
+                                <td class="text-center">
+                                    @if (user.IsFirstLogin)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-hourglass-split"></i> Chưa hoàn tất
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle-fill"></i> Đã hoàn tất
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (user.Status)
+                                    {
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Vô hiệu</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="User Actions">
+                                        <a asp-action="Details" asp-route-id="@user.UserId"
+                                           class="btn btn-outline-info" title="Chi tiết">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </a>
+                                        <!-- ✅ THÊM NÚT BẬT/TẮT -->
+                                        <form asp-action="ToggleStatus" asp-route-id="@user.UserId"
+                                              method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit"
+                                                    class="btn btn-outline-@(user.Status ? "warning" : "success")"
+                                                    title="@(user.Status ? "Vô hiệu hóa" : "Kích hoạt")"
+                                                    onclick="return confirm('Bạn có chắc chắn?')">
+                                                <i class="bi bi-@(user.Status ? "slash-circle-fill" : "check-circle-fill")"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-outline-danger btn-delete-user"
+                                                data-id="@user.UserId"
+                                                data-name="@user.FullName"
+                                                title="Xóa">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center border-0 shadow-sm p-4">
+                <h5 class="text-info">
+                    @if (filter == "incomplete")
+                    {
+                        <text>Không có người dùng nào chưa hoàn tất thông tin</text>
+                    }
+                    else if (filter == "complete")
+                    {
+                        <text>Không có người dùng nào đã hoàn tất thông tin</text>
+                    }
+                    else
+                    {
+                        <text>Chưa có người dùng nào</text>
+                    }
+                </h5>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Xử lý xóa người dùng với SweetAlert2
+        document.querySelectorAll('.btn-delete-user').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const userId = this.getAttribute('data-id');
+                const userName = this.getAttribute('data-name');
+                const deleteUrl = `@Url.Action("Delete", "Users", new { area = "Admin" })/${userId}`;
+
+                Swal.fire({
+                    title: 'Bạn có chắc chắn?',
+                    html: `Bạn muốn xóa người dùng <strong>${userName}</strong>?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+        });
+
+        // Tự động ẩn alert
+        setTimeout(function () {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

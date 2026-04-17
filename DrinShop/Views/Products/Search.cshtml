@@ -1,0 +1,410 @@
+﻿@model IEnumerable<DrinShop.Models.Product>
+@{
+    ViewData["Title"] = "Kết quả tìm kiếm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var categories = ViewBag.Categories as List<DrinShop.Models.Category>;
+    var brands = ViewBag.Brands as List<DrinShop.Models.Brand>;
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-milk-brown">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index" class="text-milk-brown">Sản phẩm</a></li>
+            <li class="breadcrumb-item active text-readable-dark" aria-current="page">Tìm kiếm</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sidebar Filter -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-md border-0 rounded-xl bg-secondary-light">
+                <div class="card-header bg-milk-brown text-beige-cream border-0 rounded-top-xl">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-filter me-2"></i> Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Search -->
+                    <form asp-action="Search" method="get" class="mb-4">
+                        <div class="input-group">
+                            <input type="text" name="term" class="form-control rounded-start-lg border-light-brown"
+                                   placeholder="Tìm kiếm..." value="@ViewBag.SearchTerm" style="border-right: none;">
+                            <button class="btn btn-milk-brown rounded-end-lg" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Categories -->
+                    <h6 class="border-bottom pb-2 mb-3 text-light-brown fw-bold">Danh mục</h6>
+                    <ul class="list-unstyled sidebar-list">
+                        <li class="mb-2">
+                            <a asp-action="Index" class="text-decoration-none @(ViewBag.CurrentCategory == null ? "text-milk-brown fw-bold" : "text-readable-dark")">
+                                <i class="fas fa-chevron-right me-2"></i> Tất cả
+                            </a>
+                        </li>
+                        @if (categories != null)
+                        {
+                            foreach (var category in categories)
+                            {
+                                <li class="mb-2">
+                                    <a asp-action="Search" asp-route-term="@ViewBag.SearchTerm" asp-route-categoryId="@category.CategoryID"
+                                       class="text-decoration-none @(ViewBag.CurrentCategory == category.CategoryID ? "text-milk-brown fw-bold" : "text-readable-dark")">
+                                        <i class="fas fa-chevron-right me-2"></i> @category.CategoryName
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+
+                    <!-- Brands -->
+                    <h6 class="border-bottom pb-2 mb-3 mt-4 text-light-brown fw-bold">Thương hiệu</h6>
+                    <ul class="list-unstyled sidebar-list">
+                        <li class="mb-2">
+                            <a asp-action="Search" asp-route-term="@ViewBag.SearchTerm"
+                               class="text-decoration-none @(ViewBag.CurrentBrand == null ? "text-milk-brown fw-bold" : "text-readable-dark")">
+                                <i class="fas fa-chevron-right me-2"></i> Tất cả
+                            </a>
+                        </li>
+                        @if (brands != null)
+                        {
+                            foreach (var brand in brands)
+                            {
+                                <li class="mb-2">
+                                    <a asp-action="Search" asp-route-term="@ViewBag.SearchTerm" asp-route-brandId="@brand.BrandID"
+                                       class="text-decoration-none @(ViewBag.CurrentBrand == brand.BrandID ? "text-milk-brown fw-bold" : "text-readable-dark")">
+                                        <i class="fas fa-chevron-right me-2"></i> @brand.BrandName
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h4 class="mb-0 text-milk-brown fw-bold">
+                    @if (!string.IsNullOrEmpty(ViewBag.SearchTerm))
+                    {
+                        <text>Kết quả cho: "<span class="text-light-brown">@ViewBag.SearchTerm</span>"</text>
+                    }
+                    else
+                    {
+                        <text>Tìm kiếm sản phẩm</text>
+                    }
+                </h4>
+                <div class="text-light-brown small fw-semibold">
+                    Trang @currentPage / @totalPages
+                </div>
+            </div>
+
+            @if (Model != null && Model.Any())
+            {
+                <div class="row">
+                    @foreach (var product in Model)
+                    {
+                        var defaultImage = product.ProductImages?.FirstOrDefault(pi => pi.IsDefault)?.ImageUrl
+                        ?? product.ProductImages?.FirstOrDefault()?.ImageUrl
+                        ?? "https://placehold.co/400x400/DCC5A1/6C4E31?text=No+Image";
+
+                        var minPrice = product.Variants?.Any() == true ? product.Variants.Min(v => v.UnitPrice) : 0;
+                        var maxPrice = product.Variants?.Any() == true ? product.Variants.Max(v => v.UnitPrice) : 0;
+                        var totalStock = product.Variants?.Sum(v => v.Stock) ?? 0;
+
+                        <div class="col-xl-4 col-md-6 col-sm-6 mb-4">
+                            <div class="card h-100 product-card shadow-sm border-0 rounded-xl">
+                                <a asp-action="Details" asp-route-id="@product.ProductID" class="text-decoration-none overflow-hidden rounded-top-xl product-image-wrapper">
+                                    <img src="@defaultImage" class="card-img-top" alt="@product.ProductName"
+                                         style="height: 250px; object-fit: cover;">
+                                </a>
+
+                                @if (totalStock == 0)
+                                {
+                                    <span class="badge bg-matcha-accent text-white position-absolute m-2 top-0 end-0 py-2 px-3 fw-bold rounded-pill">Hết hàng</span>
+                                }
+
+                                <div class="card-body d-flex flex-column">
+                                    <p class="text-light-brown small mb-1 fw-semibold">
+                                        @product.Category?.CategoryName
+                                    </p>
+                                    <h6 class="card-title mb-3 flex-grow-1">
+                                        <a asp-action="Details" asp-route-id="@product.ProductID" class="text-readable-dark text-decoration-none product-title-link">
+                                            @product.ProductName
+                                        </a>
+                                    </h6>
+
+                                    @if (minPrice > 0)
+                                    {
+                                        <div class="mb-3">
+                                            @if (minPrice == maxPrice)
+                                            {
+                                                <span class="h5 text-milk-brown mb-0 fw-bold">@minPrice.ToString("N0") VNĐ</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="h6 text-milk-brown mb-0 fw-bold">@minPrice.ToString("N0") - @maxPrice.ToString("N0") VNĐ</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <small class="text-muted">
+                                            <i class="fas fa-box me-1"></i> Còn: @totalStock
+                                        </small>
+                                        <a asp-action="Details" asp-route-id="@product.ProductID" class="btn btn-outline-milk-brown btn-sm rounded-pill fw-semibold">
+                                            <i class="fas fa-eye me-1"></i> Xem chi tiết
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination for Search -->
+                @if (totalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous -->
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link rounded-start-pill page-nav-link" asp-action="Search"
+                                   asp-route-term="@ViewBag.SearchTerm"
+                                   asp-route-page="@(currentPage - 1)">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link page-num-link" asp-action="Search"
+                                       asp-route-term="@ViewBag.SearchTerm"
+                                       asp-route-page="@i">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <!-- Next -->
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link rounded-end-pill page-nav-link" asp-action="Search"
+                                   asp-route-term="@ViewBag.SearchTerm"
+                                   asp-route-page="@(currentPage + 1)">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert bg-beige-cream text-center p-5 rounded-xl shadow-md">
+                    <i class="fas fa-search fa-4x mb-4 text-milk-brown"></i>
+                    <h4 class="fw-bold text-readable-dark">Không tìm thấy sản phẩm nào</h4>
+                    <p class="text-light-brown">Vui lòng thử tìm kiếm với từ khóa khác hoặc bỏ các bộ lọc.</p>
+                    <a asp-action="Index" class="btn btn-milk-brown rounded-pill mt-3 px-4 py-2 fw-semibold">
+                        <i class="fas fa-store me-2"></i> Xem tất cả sản phẩm
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <style>
+        /* 1. Define Color Variables */
+        :root {
+            --color-primary: #6C4E31; /* Nâu sữa - Milk Brown */
+            --color-secondary: #DCC5A1; /* Be kem - Beige Cream */
+            --color-background: #F5E9DA; /* Nền sáng - Light Background */
+            --color-light-brown: #A67C52; /* Nâu nhạt - Light Brown */
+            --color-accent: #8BC34A; /* Xanh matcha - Accent Green */
+            --color-text: #2A2A2A; /* Đen xám - Readable Dark */
+        }
+
+        /* 2. Global Styling & Resets */
+        body {
+            background-color: var(--color-background);
+        }
+
+        /* Utility Classes based on the palette */
+        .bg-milk-brown {
+            background-color: var(--color-primary) !important;
+        }
+
+        .text-milk-brown {
+            color: var(--color-primary) !important;
+        }
+
+        .bg-beige-cream {
+            background-color: var(--color-secondary) !important;
+        }
+
+        .text-beige-cream {
+            color: var(--color-secondary) !important;
+        }
+
+        .bg-light-bg {
+            background-color: var(--color-background) !important;
+        }
+
+        .text-light-brown {
+            color: var(--color-light-brown) !important;
+        }
+
+        .bg-light-brown {
+            background-color: var(--color-light-brown) !important;
+        }
+
+        .bg-matcha-accent {
+            background-color: var(--color-accent) !important;
+        }
+
+        .text-readable-dark {
+            color: var(--color-text) !important;
+        }
+
+        .bg-secondary-light {
+            background-color: var(--color-secondary) !important;
+        }
+
+        /* General UI enhancements */
+        .rounded-xl {
+            border-radius: 1rem !important;
+        }
+
+        .rounded-lg {
+            border-radius: 0.75rem !important;
+        }
+
+        .rounded-top-xl {
+            border-top-left-radius: 1rem !important;
+            border-top-right-radius: 1rem !important;
+        }
+
+        .shadow-md {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .border-light-brown {
+            border-color: var(--color-secondary) !important;
+        }
+
+        /* 3. Button Styles (Primary - Milk Brown) */
+        .btn-milk-brown {
+            color: #fff;
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            transition: all 0.2s ease;
+        }
+
+            .btn-milk-brown:hover {
+                color: #fff;
+                background-color: #58402A; /* Slightly darker */
+                border-color: #58402A;
+                box-shadow: 0 2px 8px rgba(108, 78, 49, 0.4);
+            }
+
+        .btn-outline-milk-brown {
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+            background-color: transparent;
+            transition: all 0.2s ease;
+        }
+
+            .btn-outline-milk-brown:hover {
+                color: #fff;
+                background-color: var(--color-primary);
+                border-color: var(--color-primary);
+            }
+
+        /* 4. Product Card Styling */
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: white; /* Ensure cards stand out slightly */
+        }
+
+            .product-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+            }
+
+        .product-image-wrapper {
+            display: block;
+        }
+
+        .product-card img {
+            transition: transform 0.4s ease;
+        }
+
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .product-title-link:hover {
+            color: var(--color-light-brown) !important;
+        }
+
+        /* 5. Sidebar Link Styling */
+        .sidebar-list a {
+            color: var(--color-text);
+            padding: 4px 0;
+            display: block;
+            transition: color 0.2s ease;
+        }
+
+            .sidebar-list a:hover {
+                color: var(--color-light-brown);
+            }
+
+        .sidebar-list .text-milk-brown.fw-bold {
+            border-left: 3px solid var(--color-primary);
+            padding-left: 5px;
+        }
+
+        /* 6. Pagination Styling */
+        .page-link {
+            color: var(--color-primary);
+            border: 1px solid var(--color-secondary);
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+            .page-link:hover {
+                color: var(--color-primary);
+                background-color: var(--color-secondary);
+                border-color: var(--color-secondary);
+            }
+
+        .pagination .active .page-link {
+            z-index: 3;
+            color: #fff;
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .page-num-link {
+            border-radius: 0 !important; /* Reset border radius for middle items */
+        }
+
+        .page-nav-link {
+            background-color: var(--color-secondary) !important;
+            color: var(--color-primary) !important;
+        }
+
+        .page-item.disabled .page-nav-link {
+            color: #aaa !important;
+            background-color: #eee !important;
+        }
+    </style>
+}

@@ -1,0 +1,69 @@
+﻿@model DrinShop.Models.Category
+
+@{
+    ViewData["Title"] = "Xóa danh mục";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">
+        <i class="bi bi-trash"></i> @ViewData["Title"]
+    </h3>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left-circle-fill"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="alert alert-danger p-4 mb-4" role="alert">
+    <h4 class="alert-heading">
+        <i class="bi bi-exclamation-triangle-fill"></i> Cảnh báo: Xác nhận xóa danh mục
+    </h4>
+    <p>Bạn có chắc chắn muốn xóa danh mục **@Model.CategoryName** không? Hành động này **không thể hoàn tác** và có thể ảnh hưởng đến các sản phẩm đang liên kết.</p>
+    <hr>
+    <p class="mb-0">Nếu không muốn xóa vĩnh viễn, bạn nên **Vô hiệu hóa** danh mục đó bằng cách sử dụng chức năng Sửa.</p>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Thông tin danh mục cần xóa</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CategoryName)</dt>
+            <dd class="col-sm-9"><strong>@Html.DisplayFor(model => model.CategoryName)</strong></dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Description)</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Description) ? "N/A" : Model.Description)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Status)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Status)
+                {
+                    <span class="badge bg-success">Kích hoạt</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Vô hiệu</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CreateDate)</dt>
+            <dd class="col-sm-9">@(Model.CreateDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CreatedBy)</dt>
+            <dd class="col-sm-9">@(Model.CreatedBy ?? "N/A")</dd>
+
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post" class="mt-4">
+    <input type="hidden" asp-for="CategoryID" />
+
+    <button type="submit" class="btn btn-danger me-2">
+        <i class="bi bi-trash-fill"></i> Xác nhận Xóa
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="bi bi-x-circle-fill"></i> Hủy bỏ
+    </a>
+</form>

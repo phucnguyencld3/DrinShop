@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    @RenderSection("Styles", required: false)
+
+    <!-- ✅ XÓA: TOASTR CSS vì không cần -->
+    @* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css" integrity="sha512-6S2HWzVFxruDlZxI3sXOZZ4/eJ8AcxkQH1+JjSe/ONCEqR9L4Ysq5JdT5ipqtzU7WHalNwzwBv+iE51gNHJNqQ==" crossorigin="anonymous" referrerpolicy="no-referrer" /> *@
+</head>
+
+<body class="admin-layout">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow fixed-top">
+        <div class="container-fluid">
+
+            <!-- Brand -->
+            <a class="navbar-brand fw-bold" href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">
+                <i class="fas fa-tachometer-alt me-2"></i> Admin Panel
+            </a>
+
+            <!-- Toggle Button for Mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Right -->
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-globe text-primary me-2"></i> Về trang chính
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                    <button class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- SIDEBAR - OFFCANVAS FOR MOBILE -->
+    <div class="offcanvas offcanvas-start bg-light border-end" id="sidebarOffcanvas">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            @await Html.PartialAsync("_AdminNavigation")
+        </div>
+    </div>
+
+    <!-- SIDEBAR FOR DESKTOP -->
+    <div class="container-fluid" style="padding-top: 70px;">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-none d-md-block bg-light border-end sidebar">
+                <div class="position-sticky pt-3">
+                    @await Html.PartialAsync("_AdminNavigation")
+                </div>
+            </nav>
+
+            <!-- MAIN CONTENT -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center
+                            pt-3 pb-2 mb-3 border-bottom">
+
+                    <h1 class="h2 text-dark">@ViewData["Title"]</h1>
+                    @RenderSection("PageActions", required: false)
+
+                </div>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- ✅ XÓA: TOASTR JS vì gây lỗi -->
+    @* <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> *@
+
+    <!-- ✅ XÓA: TOASTR CONFIGURATION vì không cần -->
+    @* <script>
+        // Cấu hình Toastr
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        // ✅ Auto show TempData messages with Toastr
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>toastr.success('@Html.Raw(TempData["SuccessMessage"].ToString())');</text>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>toastr.error('@Html.Raw(TempData["ErrorMessage"].ToString())');</text>
+        }
+
+        @if (TempData["InfoMessage"] != null)
+        {
+            <text>toastr.info('@Html.Raw(TempData["InfoMessage"].ToString())');</text>
+        }
+
+        @if (TempData["WarningMessage"] != null)
+        {
+            <text>toastr.warning('@Html.Raw(TempData["WarningMessage"].ToString())');</text>
+        }
+    </script> *@
+
+    <!-- ✅ THÊM: SweetAlert2 để thay thế toastr -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // ✅ Auto show TempData messages with SweetAlert2
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: '@Html.Raw(TempData["SuccessMessage"].ToString().Replace("'", "\\'"))',
+                            timer: 3000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+            </text>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: '@Html.Raw(TempData["ErrorMessage"].ToString().Replace("'", "\\'"))',
+                            timer: 5000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+            </text>
+        }
+
+        @if (TempData["InfoMessage"] != null)
+        {
+            <text>
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Thông báo!',
+                            text: '@Html.Raw(TempData["InfoMessage"].ToString().Replace("'", "\\'"))',
+                            timer: 4000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+            </text>
+        }
+
+        @if (TempData["WarningMessage"] != null)
+        {
+            <text>
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cảnh báo!',
+                            text: '@Html.Raw(TempData["WarningMessage"].ToString().Replace("'", "\\'"))',
+                            timer: 4000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+            </text>
+        }
+    </script>
+
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>
+
+

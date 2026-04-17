@@ -1,0 +1,265 @@
+﻿@model DrinShop.ViewModels.CompleteProfileViewModel
+
+@{
+    ViewData["Title"] = "Bổ sung thông tin tài khoản";
+}
+
+<style>
+    /* Primary: #6C4E31 - Nâu sữa, #DCC5A1 - Be kem */
+    /* Secondary: #F5E9DA - Nền sáng, #A67C52 - Nâu nhạt */
+    /* Accent: #8BC34A - Xanh matcha nhẹ */
+    /* Text: #2A2A2A - Đen xám dễ đọc */
+
+    :root {
+        --bs-primary: #6C4E31; /* Nâu sữa */
+        --bs-primary-light: #DCC5A1; /* Be kem */
+        --bs-secondary: #A67C52; /* Nâu nhạt */
+        --bs-light-background: #F5E9DA; /* Nền sáng */
+        --bs-accent: #8BC34A; /* Xanh matcha nhẹ */
+        --bs-text-color: #2A2A2A; /* Đen xám dễ đọc */
+    }
+
+    body {
+        background-color: var(--bs-light-background);
+        color: var(--bs-text-color);
+    }
+
+    .card {
+        border: 1px solid var(--bs-primary-light) !important;
+    }
+
+    /* Áp dụng màu cho các thành phần chính của form */
+    .text-primary, a.text-primary {
+        color: var(--bs-primary) !important;
+    }
+
+    /* Đổi màu header từ Success (xanh lá mặc định) sang Accent (Xanh matcha nhẹ) */
+    .card-header.bg-success {
+        background-color: var(--bs-accent) !important;
+        color: white !important;
+    }
+
+    /* Cập nhật màu nút Hoàn tất (Success/Accent) */
+    .btn-success {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--bs-accent);
+        --bs-btn-border-color: var(--bs-accent);
+        --bs-btn-hover-bg: #6e993f; /* Màu xanh đậm hơn */
+        --bs-btn-hover-border-color: #6e993f;
+    }
+
+    /* Cập nhật màu thông báo */
+    .alert-danger {
+        color: #842029;
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .text-muted {
+        color: var(--bs-secondary) !important; /* Dùng màu nâu nhạt cho ghi chú */
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-check-fill"></i> Chào mừng bạn!
+                    </h3>
+                    <p class="mb-0 mt-2">Vui lòng bổ sung thông tin để hoàn tất tài khoản của bạn</p>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CompleteProfile" method="post">
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <h5 class="text-primary mb-3"><i class="bi bi-person-fill"></i> Thông tin cơ bản</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FullName" class="form-label fw-bold"></label>
+                                <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên đầy đủ" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input value="@Model.Email" class="form-control" disabled />
+                                <small class="text-muted">Email không thể thay đổi</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Phone" class="form-label fw-bold"></label>
+                                <input asp-for="Phone" class="form-control" placeholder="0901234567" />
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Gender" class="form-label fw-bold"></label>
+                                <select asp-for="Gender" class="form-select" required>
+                                    <option value="">-- Chọn giới tính --</option>
+                                    <option value="true">Nam</option>
+                                    <option value="false">Nữ</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DateOfBirth" class="form-label fw-bold"></label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-geo-alt-fill"></i> Địa chỉ
+                            <small class="text-muted">(Tùy chọn - có thể bỏ qua)</small>
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ProvinceCode" class="form-label fw-bold"></label>
+                                <select asp-for="ProvinceCode" id="provinceSelect" class="form-select">
+                                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                    @if (ViewBag.Provinces != null)
+                                    {
+                                        foreach (var province in ViewBag.Provinces as List<SelectListItem>)
+                                        {
+                                            <option value="@province.Value">@province.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="ProvinceCode" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="DistrictCode" class="form-label fw-bold"></label>
+                                <select asp-for="DistrictCode" id="districtSelect" class="form-select" disabled>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                </select>
+                                <span asp-validation-for="DistrictCode" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="WardCode" class="form-label fw-bold"></label>
+                                <select asp-for="WardCode" id="wardSelect" class="form-select" disabled>
+                                    <option value="">-- Chọn Phường/Xã --</option>
+                                </select>
+                                <span asp-validation-for="WardCode" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Address" class="form-label fw-bold"></label>
+                                <input asp-for="Address" class="form-control" placeholder="Tên đường, khu vực..." />
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StreetAddress" class="form-label fw-bold"></label>
+                                <input asp-for="StreetAddress" class="form-control" placeholder="Số nhà, tên tòa nhà..." />
+                                <span asp-validation-for="StreetAddress" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle-fill"></i> Hoàn tất thông tin
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <p class="text-muted small">
+                                <i class="bi bi-info-circle"></i>
+                                Bạn có thể cập nhật thông tin này sau trong trang cá nhân
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Sử dụng Fetch API để tải dữ liệu (giữ nguyên logic gốc của bạn)
+
+        // Khi chọn tỉnh → Load quận/huyện
+        document.getElementById('provinceSelect').addEventListener('change', function() {
+            const provinceCode = this.value;
+            const districtSelect = document.getElementById('districtSelect');
+            const wardSelect = document.getElementById('wardSelect');
+
+            // Reset
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            districtSelect.disabled = true;
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wardSelect.disabled = true;
+
+            if (!provinceCode) return;
+
+            // Dùng URL.Action từ Razor để tạo URL chính xác
+            const url = '@Url.Action("GetDistricts", "Account")';
+            fetch(`${url}?provinceCode=${provinceCode}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    data.forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district.value;
+                        option.textContent = district.text;
+                        districtSelect.appendChild(option);
+                    });
+                    districtSelect.disabled = false;
+                })
+                .catch(error => console.error('Error loading districts:', error));
+        });
+
+        // Khi chọn quận → Load phường/xã
+        document.getElementById('districtSelect').addEventListener('change', function() {
+            const districtCode = this.value;
+            const wardSelect = document.getElementById('wardSelect');
+
+            // Reset
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wardSelect.disabled = true;
+
+            if (!districtCode) return;
+
+            // Dùng URL.Action từ Razor để tạo URL chính xác
+            const url = '@Url.Action("GetWards", "Account")';
+            fetch(`${url}?districtCode=${districtCode}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    data.forEach(ward => {
+                        const option = document.createElement('option');
+                        option.value = ward.value;
+                        option.textContent = ward.text;
+                        wardSelect.appendChild(option);
+                    });
+                    wardSelect.disabled = false;
+                })
+                .catch(error => console.error('Error loading wards:', error));
+        });
+    </script>
+}

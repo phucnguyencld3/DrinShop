@@ -1,0 +1,285 @@
+﻿@model DrinShop.Models.Product
+@using DrinShop.Models;
+
+@{
+    ViewData["Title"] = Model.ProductID == 0 ? "Thêm sản phẩm" : "Sửa sản phẩm";
+}
+
+<div class="row">
+    <div class="col-lg-7 col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-box-open"></i> @(Model.ProductID == 0 ? "Thêm sản phẩm mới" : "Thông tin sản phẩm")
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="ProductID" />
+                    <input type="hidden" asp-for="CreatedBy" />
+                    <input type="hidden" asp-for="CreateDate" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="CategoryID" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                                <select asp-for="CategoryID" class="form-select" asp-items="@(new SelectList(ViewData["Categories"] as List<Category>, "CategoryID", "CategoryName"))">
+                                    <option value="">-- Chọn danh mục --</option>
+                                </select>
+                                <span asp-validation-for="CategoryID" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="BrandID" class="form-label">Thương hiệu</label>
+                                <select asp-for="BrandID" class="form-select" asp-items="@(new SelectList(ViewData["Brands"] as List<Brand>, "BrandID", "BrandName"))">
+                                    <option value="">-- Chọn thương hiệu --</option>
+                                </select>
+                                <span asp-validation-for="BrandID" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Code" class="form-label">
+                                    Mã sản phẩm <span class="text-danger">*</span>
+                                    @if (Model.ProductID == 0)
+                                    {
+                                        <span class="badge bg-success">Tự sinh</span>
+                                    }
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="Code"
+                                           class="form-control @(Model.ProductID == 0 ? "bg-light" : "")"
+                                           placeholder="@(Model.ProductID == 0 ? "Mã sản phẩm tự động tạo" : "Mã sản phẩm")"
+                                           readonly="@(Model.ProductID == 0)" />
+                                    @if (Model.ProductID == 0)
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary" id="btnGenerateCode" title="Tạo mã mới">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    }
+                                </div>
+                                <span asp-validation-for="Code" class="text-danger small"></span>
+                                @if (Model.ProductID == 0)
+                                {
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle"></i>
+                                        Mã sản phẩm được tự động tạo. Nhấn <i class="fas fa-sync-alt"></i> để tạo mã mới khác.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="TotalStock" class="form-label">Tồn kho <span class="text-danger">*</span></label>
+                                <input asp-for="TotalStock" class="form-control" type="number" min="0" placeholder="Số lượng tồn kho" />
+                                <span asp-validation-for="TotalStock" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="ProductName" class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                        <input asp-for="ProductName" class="form-control" placeholder="Nhập tên sản phẩm" />
+                        <span asp-validation-for="ProductName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="form-label">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả sản phẩm"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="Status" class="form-check-input" type="checkbox" />
+                        <label asp-for="Status" class="form-check-label">
+                            Kích hoạt sản phẩm
+                        </label>
+                    </div>
+
+                    <div class="form-group mb-4 p-3 border rounded">
+                        <label for="images" class="form-label fw-bold">Thêm ảnh sản phẩm</label>
+                        <input type="file" name="images" id="images" class="form-control" accept="image/*" multiple />
+                        <div class="form-text">
+                            Bạn có thể chọn nhiều ảnh cùng lúc. Các ảnh sẽ được upload khi bạn nhấn **@(Model.ProductID == 0 ? "Thêm mới" : "Cập nhật")**.
+                        </div>
+                    </div>
+
+                    <div class="form-group pt-3 border-top">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-save"></i>
+                            @(Model.ProductID == 0 ? "Thêm mới sản phẩm" : "Cập nhật sản phẩm")
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.ProductID != 0)
+    {
+        <div class="col-lg-5 col-md-12 mt-lg-0 mt-3">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-images"></i> Ảnh hiện tại (@(Model.ProductImages?.Count() ?? 0))</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProductImages != null && Model.ProductImages.Any())
+                    {
+                        <div class="image-gallery row g-3" id="productImageGallery">
+                            @foreach (var image in Model.ProductImages.OrderBy(i => i.SortOrder))
+                            {
+                                <div class="col-4 image-item" data-image-id="@image.ProductImageId">
+                                    <div class="image-container position-relative border p-1 rounded @(image.IsDefault ? "border-success border-3" : "")">
+                                        <img src="@image.ImageUrl" class="img-fluid rounded" alt="Product Image" style="height: 120px; width: 100%; object-fit: cover;" />
+
+                                        @if (image.IsDefault)
+                                        {
+                                            <span class="badge bg-success position-absolute top-0 start-0 m-1" title="Ảnh mặc định">Mặc định</span>
+                                        }
+
+                                        <div class="image-overlay position-absolute bottom-0 w-100 p-1 bg-dark bg-opacity-75 d-flex justify-content-around rounded-bottom">
+                                            @if (!image.IsDefault)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-light set-default-btn"
+                                                        data-image-id="@image.ProductImageId"
+                                                        data-product-id="@Model.ProductID"
+                                                        title="Đặt làm ảnh mặc định">
+                                                    <i class="fas fa-star"></i>
+                                                </button>
+                                            }
+
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-image-btn"
+                                                    data-image-id="@image.ProductImageId"
+                                                    data-image-url="@image.ImageUrl"
+                                                    title="Xóa ảnh">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle"></i> Sản phẩm này chưa có ảnh nào.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Logic tạo mã mới (đã có)
+            $('#btnGenerateCode').click(function() {
+                $.get('/Products/GenerateNewCode', function(data) {
+                    $('#Code').val(data.code);
+                    $('#Code').addClass('bg-warning').delay(500).queue(function() {
+                        $(this).removeClass('bg-warning').dequeue();
+                    });
+                }).fail(function() {
+                     Swal.fire('Lỗi', 'Không thể tạo mã sản phẩm mới.', 'error');
+                });
+            });
+
+            // -------------------------------------------------------------
+            // Logic XÓA ẢNH sử dụng AJAX
+            // -------------------------------------------------------------
+            $(document).on('click', '.delete-image-btn', function() {
+                var imageId = $(this).data('image-id');
+                var imageUrl = $(this).data('image-url');
+                var imageItem = $(this).closest('.image-item');
+
+                Swal.fire({
+                    title: 'Xóa ảnh?',
+                    text: "Bạn có chắc chắn muốn xóa ảnh này?",
+                    imageUrl: imageUrl, // Hiển thị ảnh trong popup
+                    imageWidth: 200,
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteImage", "Products")',
+                            type: 'POST',
+                            data: { imageId: imageId },
+                            success: function(response) {
+                                if (response.success) {
+                                    imageItem.remove(); // Xóa ảnh khỏi DOM
+                                    Swal.fire('Thành công!', response.message, 'success');
+                                } else {
+                                    Swal.fire('Lỗi', response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Lỗi', 'Có lỗi xảy ra khi gửi yêu cầu xóa ảnh.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // -------------------------------------------------------------
+            // Logic ĐẶT ẢNH MẶC ĐỊNH sử dụng AJAX
+            // -------------------------------------------------------------
+            $(document).on('click', '.set-default-btn', function() {
+                var imageId = $(this).data('image-id');
+                var productId = $(this).data('product-id');
+
+                $.ajax({
+                    url: '@Url.Action("SetDefaultImage", "Products")',
+                    type: 'POST',
+                    data: { imageId: imageId, productId: productId },
+                    success: function(response) {
+                        if (response.success) {
+                            // Cập nhật giao diện:
+                            // 1. Loại bỏ trạng thái mặc định cũ
+                            $('#productImageGallery .image-container').removeClass('border-success border-3');
+                            $('#productImageGallery .badge.bg-success').remove();
+                            // Thêm lại nút đặt mặc định cho ảnh cũ
+
+                            // 2. Thêm trạng thái mặc định mới
+                            var currentImageContainer = $('.image-item[data-image-id="' + imageId + '"] .image-container');
+                            currentImageContainer.addClass('border-success border-3');
+                            currentImageContainer.prepend('<span class="badge bg-success position-absolute top-0 start-0 m-1" title="Ảnh mặc định">Mặc định</span>');
+
+                            // 3. Thay nút 'Đặt mặc định' bằng chính nó (để refresh)
+                            // Để đơn giản, ta reload lại trang để cập nhật nút "Đặt mặc định"
+                            location.reload();
+                        } else {
+                            Swal.fire('Lỗi', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Lỗi', 'Có lỗi xảy ra khi đặt ảnh mặc định.', 'error');
+                    }
+                });
+            });
+
+        });
+    </script>
+}

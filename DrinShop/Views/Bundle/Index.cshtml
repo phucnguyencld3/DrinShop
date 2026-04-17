@@ -1,0 +1,616 @@
+﻿@model IEnumerable<DrinShop.Models.Bundle>
+@{
+    ViewData["Title"] = "Combo ưu đãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var combos = Model?.ToList() ?? new List<DrinShop.Models.Bundle>();
+
+    // Thiết lập để hiển thị Breadcrumb trong _Layout
+    ViewBag.ShowBreadcrumb = true;
+
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchTerm = ViewBag.SearchTerm;
+    var sortBy = ViewBag.SortBy;
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-milk-brown">Trang chủ</a></li>
+    <li class="breadcrumb-item active text-readable-dark" aria-current="page">Combo ưu đãi</li>
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Cột lọc combo -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-md border-0 rounded-xl bg-secondary-light">
+                <div class="card-header bg-milk-brown text-beige-cream border-0 rounded-top-xl">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-filter me-2"></i> Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Form tìm kiếm -->
+                    <form asp-action="Index" method="get" class="mb-4">
+                        <div class="input-group">
+                            <input type="text" name="searchTerm" class="form-control rounded-start-lg border-light-brown"
+                                   placeholder="Tìm kiếm combo..." value="@searchTerm" style="border-right: none;">
+                            <button class="btn btn-milk-brown rounded-end-lg" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <!-- Bộ lọc Sắp xếp -->
+                        <h6 class="border-bottom pb-2 mb-3 mt-4 text-light-brown fw-bold">Sắp xếp theo</h6>
+                        <ul class="list-unstyled sidebar-list">
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sortBy" id="sortName" value="name"
+                                           checked="@(sortBy == "name" || string.IsNullOrEmpty(sortBy))" onchange="this.form.submit()">
+                                    <label class="form-check-label text-readable-dark" for="sortName">
+                                        <i class="fas fa-sort-alpha-down me-2"></i> Tên A-Z
+                                    </label>
+                                </div>
+                            </li>
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sortBy" id="sortPriceAsc" value="price_asc"
+                                           checked="@(sortBy == "price_asc")" onchange="this.form.submit()">
+                                    <label class="form-check-label text-readable-dark" for="sortPriceAsc">
+                                        <i class="fas fa-sort-amount-up me-2"></i> Giá thấp đến cao
+                                    </label>
+                                </div>
+                            </li>
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sortBy" id="sortPriceDesc" value="price_desc"
+                                           checked="@(sortBy == "price_desc")" onchange="this.form.submit()">
+                                    <label class="form-check-label text-readable-dark" for="sortPriceDesc">
+                                        <i class="fas fa-sort-amount-down me-2"></i> Giá cao đến thấp
+                                    </label>
+                                </div>
+                            </li>
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sortBy" id="sortDiscount" value="discount"
+                                           checked="@(sortBy == "discount")" onchange="this.form.submit()">
+                                    <label class="form-check-label text-readable-dark" for="sortDiscount">
+                                        <i class="fas fa-percentage me-2"></i> Giảm giá nhiều nhất
+                                    </label>
+                                </div>
+                            </li>
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sortBy" id="sortNewest" value="newest"
+                                           checked="@(sortBy == "newest")" onchange="this.form.submit()">
+                                    <label class="form-check-label text-readable-dark" for="sortNewest">
+                                        <i class="fas fa-clock me-2"></i> Mới nhất
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột danh sách combo -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h4 class="mb-0 text-milk-brown fw-bold">
+                    @if (!string.IsNullOrEmpty(searchTerm))
+                    {
+                        <text>Kết quả tìm kiếm: "<span class="text-light-brown">@searchTerm</span>"</text>
+                    }
+                    else
+                    {
+                        <text>Tất cả Combo ưu đãi</text>
+                    }
+                </h4>
+                @if (totalPages > 1)
+                {
+                    <div class="text-light-brown small fw-semibold">
+                        Trang @currentPage / @totalPages
+                    </div>
+                }
+            </div>
+
+            @if (combos.Any())
+            {
+                <div class="row">
+                    @foreach (var combo in combos)
+                    {
+                        var firstProductImage = combo.BundleItems?.FirstOrDefault()?.Variant?.Product?.ProductImages?
+                        .OrderByDescending(x => x.IsDefault).FirstOrDefault()?.ImageUrl ?? "https://placehold.co/400x400/DCC5A1/6C4E31?text=No+Image";
+                        var comboImage = string.IsNullOrEmpty(combo.ImageUrl) ? firstProductImage : combo.ImageUrl;
+                        var itemsCount = combo.BundleItems?.Count ?? 0;
+                        var totalStock = combo.AvailableStock;
+
+                        <div class="col-xl-4 col-md-6 col-sm-6 mb-4">
+                            <div class="card h-100 product-card shadow-sm border-0 rounded-xl">
+                                <a asp-action="Details" asp-route-id="@combo.BundleId" class="text-decoration-none overflow-hidden rounded-top-xl product-image-wrapper">
+                                    <img src="@comboImage" class="card-img-top" alt="@combo.Name" style="height: 250px; object-fit: cover;">
+                                </a>
+
+                                @* Hiển thị Badge *@
+                                @if (totalStock == 0)
+                                {
+                                    <span class="badge bg-danger text-white position-absolute m-2 top-0 end-0 py-2 px-3 fw-bold rounded-pill">Hết hàng</span>
+                                }
+                                else if (combo.DiscountPercentage > 0)
+                                {
+                                    <span class="badge bg-matcha-accent text-white position-absolute m-2 top-0 end-0 py-2 px-3 fw-bold rounded-pill">-@combo.DiscountPercentage.ToString("0.0")%</span>
+                                }
+                                else if (totalStock <= 5)
+                                {
+                                    <span class="badge bg-warning text-dark position-absolute m-2 top-0 end-0 py-2 px-3 fw-bold rounded-pill">Sắp hết</span>
+                                }
+
+                                <div class="card-body d-flex flex-column">
+                                    <p class="text-light-brown small mb-1 fw-semibold">
+                                        <i class="fas fa-box me-1"></i> @itemsCount sản phẩm
+                                    </p>
+                                    <h6 class="card-title mb-3 flex-grow-1">
+                                        <a asp-action="Details" asp-route-id="@combo.BundleId" class="text-readable-dark text-decoration-none product-title-link">
+                                            @combo.Name
+                                        </a>
+                                    </h6>
+
+                                    @* Hiển thị Giá *@
+                                    @if (combo.FinalPrice > 0)
+                                    {
+                                        <div class="mb-3">
+                                            @if (combo.OriginalPrice > combo.FinalPrice)
+                                            {
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="text-muted text-decoration-line-through small">
+                                                        @combo.OriginalPrice.ToString("N0") VNĐ
+                                                    </span>
+                                                    <span class="badge bg-danger text-white small rounded-pill">
+                                                        -@((100 - (combo.FinalPrice / combo.OriginalPrice * 100)).ToString("0"))%
+                                                    </span>
+                                                </div>
+                                            }
+                                            <span class="h5 text-milk-brown mb-0 fw-bold">@combo.FinalPrice.ToString("N0") VNĐ</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mb-3">
+                                            <span class="h6 mb-0 text-secondary">Giá liên hệ</span>
+                                        </div>
+                                    }
+
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <small class="text-muted">
+                                            <i class="fas fa-warehouse me-1"></i> Còn: @totalStock
+                                        </small>
+                                        <div class="d-flex gap-2">
+                                            @if (totalStock > 0)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill btn-add-to-cart"
+                                                        data-combo-id="@combo.BundleId" data-combo-name="@combo.Name">
+                                                    <i class="fas fa-shopping-cart me-1"></i> Thêm
+                                                </button>
+                                            }
+                                            <a asp-action="Details" asp-route-id="@combo.BundleId" class="btn btn-outline-milk-brown btn-sm rounded-pill fw-semibold">
+                                                <i class="fas fa-eye me-1"></i> Chi tiết
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @* Phân trang *@
+                @if (totalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link rounded-start-pill page-nav-link" asp-action="Index"
+                                   asp-route-searchTerm="@searchTerm"
+                                   asp-route-sortBy="@sortBy"
+                                   asp-route-page="@(currentPage - 1)">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link page-num-link" asp-action="Index"
+                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-sortBy="@sortBy"
+                                       asp-route-page="@i">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link rounded-end-pill page-nav-link" asp-action="Index"
+                                   asp-route-searchTerm="@searchTerm"
+                                   asp-route-sortBy="@sortBy"
+                                   asp-route-page="@(currentPage + 1)">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                @* Thông báo không có combo *@
+                <div class="alert bg-beige-cream text-center p-5 rounded-xl shadow-md">
+                    <i class="fas fa-gift fa-4x mb-4 text-milk-brown"></i>
+                    <h4 class="fw-bold text-readable-dark">Không tìm thấy combo nào</h4>
+                    <p class="text-light-brown">Vui lòng thử tìm kiếm với từ khóa khác hoặc xem các sản phẩm khác.</p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a asp-action="Index" class="btn btn-milk-brown rounded-pill px-4 py-2 fw-semibold">
+                            <i class="fas fa-gift me-2"></i> Xem tất cả combo
+                        </a>
+                        <a asp-controller="Products" asp-action="Index" class="btn btn-outline-milk-brown rounded-pill px-4 py-2 fw-semibold">
+                            <i class="fas fa-coffee me-2"></i> Xem sản phẩm
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Thêm combo vào giỏ hàng
+            $('.btn-add-to-cart').click(function() {
+                const comboId = $(this).data('combo-id');
+                const comboName = $(this).data('combo-name');
+                const $button = $(this);
+
+                // Hiện dialog số lượng
+                Swal.fire({
+                    title: `Thêm combo "${comboName}"`,
+                    html: `
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số lượng:</label>
+                            <div class="input-group justify-content-center">
+                                <button class="btn btn-outline-secondary" type="button" id="decreaseBtn">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" id="quantity" class="form-control text-center"
+                                       value="1" min="1" max="10" style="max-width: 100px;">
+                                <button class="btn btn-outline-secondary" type="button" id="increaseBtn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-shopping-cart me-2"></i>Thêm vào giỏ',
+                    cancelButtonText: 'Hủy',
+                    confirmButtonColor: '#6C4E31',
+                    cancelButtonColor: '#6c757d',
+                    didOpen: () => {
+                        // Xử lý tăng/giảm số lượng
+                        document.getElementById('increaseBtn').onclick = function() {
+                            const input = document.getElementById('quantity');
+                            const current = parseInt(input.value) || 1;
+                            const max = parseInt(input.max) || 10;
+                            if (current < max) {
+                                input.value = current + 1;
+                            }
+                        };
+
+                        document.getElementById('decreaseBtn').onclick = function() {
+                            const input = document.getElementById('quantity');
+                            const current = parseInt(input.value) || 1;
+                            if (current > 1) {
+                                input.value = current - 1;
+                            }
+                        };
+                    },
+                    preConfirm: () => {
+                        const quantity = parseInt(document.getElementById('quantity').value);
+                        if (!quantity || quantity < 1) {
+                            Swal.showValidationMessage('Vui lòng nhập số lượng hợp lệ!');
+                            return false;
+                        }
+
+                        // Kiểm tra stock
+                        const stockText = $button.closest('.product-card').find('.text-muted:contains("Còn:")').text();
+                        const maxStock = parseInt(stockText.match(/\d+/)?.[0] || 0);
+                        if (quantity > maxStock) {
+                            Swal.showValidationMessage(`Số lượng vượt quá hàng còn lại (${maxStock})!`);
+                            return false;
+                        }
+                        return quantity;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        addToCart(comboId, result.value, comboName);
+                    }
+                });
+            });
+
+            // Function thêm vào giỏ
+            function addToCart(comboId, quantity, comboName) {
+                // Show loading
+                Swal.fire({
+                    title: 'Đang xử lý...',
+                    text: 'Vui lòng đợi',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.post('@Url.Action("AddToCart")', {
+                    bundleId: comboId,
+                    quantity: quantity
+                })
+                .done(function(response) {
+                    Swal.close();
+
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: `Đã thêm ${quantity}x ${comboName} vào giỏ hàng`,
+                            timer: 3000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+
+                        // Cập nhật cart count
+                        if (response.cartCount !== undefined) {
+                            $('#cart-count').text(response.cartCount);
+
+                            // Animation cho cart icon
+                            $('#cart-count').parent().addClass('animate__animated animate__heartBeat');
+                            setTimeout(() => {
+                                $('#cart-count').parent().removeClass('animate__animated animate__heartBeat');
+                            }, 1000);
+                        }
+                    } else {
+                        if (response.requireLogin) {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Cần đăng nhập',
+                                text: response.message,
+                                showCancelButton: true,
+                                confirmButtonText: '<i class="fas fa-sign-in-alt me-2"></i>Đăng nhập',
+                                cancelButtonText: 'Hủy',
+                                confirmButtonColor: '#6C4E31'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.href);
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi!',
+                                text: response.message,
+                                confirmButtonColor: '#6C4E31'
+                            });
+                        }
+                    }
+                })
+                .fail(function() {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi kết nối!',
+                        text: 'Có lỗi xảy ra khi kết nối server. Vui lòng thử lại!',
+                        confirmButtonColor: '#6C4E31'
+                    });
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        /* 1. Define Color Variables */
+        :root {
+            --color-primary: #6C4E31; /* Nâu sữa - Milk Brown */
+            --color-secondary: #DCC5A1; /* Be kem - Beige Cream */
+            --color-background: #F5E9DA; /* Nền sáng - Light Background */
+            --color-light-brown: #A67C52; /* Nâu nhạt - Light Brown */
+            --color-accent: #8BC34A; /* Xanh matcha - Accent Green */
+            --color-text: #2A2A2A; /* Đen xám - Readable Dark */
+        }
+
+        /* 2. Global Styling & Resets */
+        body {
+            background-color: var(--color-background);
+        }
+
+        /* Utility Classes based on the palette */
+        .bg-milk-brown {
+            background-color: var(--color-primary) !important;
+        }
+
+        .text-milk-brown {
+            color: var(--color-primary) !important;
+        }
+
+        .bg-beige-cream {
+            background-color: var(--color-secondary) !important;
+        }
+
+        .text-beige-cream {
+            color: var(--color-secondary) !important;
+        }
+
+        .bg-light-bg {
+            background-color: var(--color-background) !important;
+        }
+
+        .text-light-brown {
+            color: var(--color-light-brown) !important;
+        }
+
+        .bg-light-brown {
+            background-color: var(--color-light-brown) !important;
+        }
+
+        .bg-matcha-accent {
+            background-color: var(--color-accent) !important;
+        }
+
+        .text-readable-dark {
+            color: var(--color-text) !important;
+        }
+
+        .bg-secondary-light {
+            background-color: var(--color-secondary) !important;
+        }
+
+        /* General UI enhancements */
+        .rounded-xl {
+            border-radius: 1rem !important;
+        }
+
+        .rounded-lg {
+            border-radius: 0.75rem !important;
+        }
+
+        .rounded-top-xl {
+            border-top-left-radius: 1rem !important;
+            border-top-right-radius: 1rem !important;
+        }
+
+        .shadow-md {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .border-light-brown {
+            border-color: var(--color-secondary) !important;
+        }
+
+        /* 3. Button Styles (Primary - Milk Brown) */
+        .btn-milk-brown {
+            color: #fff;
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            transition: all 0.2s ease;
+        }
+
+            .btn-milk-brown:hover {
+                color: #fff;
+                background-color: #58402A;
+                border-color: #58402A;
+                box-shadow: 0 2px 8px rgba(108, 78, 49, 0.4);
+            }
+
+        .btn-outline-milk-brown {
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+            background-color: transparent;
+            transition: all 0.2s ease;
+        }
+
+            .btn-outline-milk-brown:hover {
+                color: #fff;
+                background-color: var(--color-primary);
+                border-color: var(--color-primary);
+            }
+
+        /* 4. Product Card Styling */
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: white;
+        }
+
+            .product-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+            }
+
+        .product-image-wrapper {
+            display: block;
+        }
+
+        .product-card img {
+            transition: transform 0.4s ease;
+        }
+
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .product-title-link:hover {
+            color: var(--color-light-brown) !important;
+        }
+
+        /* 5. Sidebar Styling */
+        .sidebar-list .form-check-label {
+            color: var(--color-text);
+            padding: 4px 0;
+            transition: color 0.2s ease;
+            cursor: pointer;
+        }
+
+            .sidebar-list .form-check-label:hover {
+                color: var(--color-light-brown);
+            }
+
+        .sidebar-list .form-check-input:checked + .form-check-label {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        /* 6. Pagination Styling */
+        .page-link {
+            color: var(--color-primary);
+            border: 1px solid var(--color-secondary);
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+            .page-link:hover {
+                color: var(--color-primary);
+                background-color: var(--color-secondary);
+                border-color: var(--color-secondary);
+            }
+
+        .pagination .active .page-link {
+            z-index: 3;
+            color: #fff;
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .page-num-link {
+            border-radius: 0 !important;
+        }
+
+        .page-nav-link {
+            background-color: var(--color-secondary) !important;
+            color: var(--color-primary) !important;
+        }
+
+        .page-item.disabled .page-nav-link {
+            color: #aaa !important;
+            background-color: #eee !important;
+        }
+
+        /* 7. Badge & Special Elements */
+        .badge {
+            font-size: 0.7rem;
+        }
+
+        /* 8. Animation cho cart icon */
+        .animate__heartBeat {
+            animation-duration: 1s;
+        }
+    </style>
+}
